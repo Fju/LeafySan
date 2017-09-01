@@ -22,11 +22,11 @@ __verwendete Aktoren:__
 
 Die Elektronik wurde auf einer Holzplatte mit Schrauben und Stelzen befestigt, damit bei einem Wasserleck nicht die sich auf dem Boden befindliche Elektronik beschädigt wird. Damit die Funktionsweise der einzelnen Sensoren und Aktoren demonstriert werden kann, wurde ein "Gewächshaus" angefertigt, das aus einem Aluminiumboden und einer Acrylglas-Haube besteht. Darin befindet sich Blumenerde, die von einem kleinen Schlauchsystem bewässert wird, sowie der Bodenfeuchte-Sensor, der die Feuchtigkeit des Boden nicht-kapazitiv misst. Außerdem wurde die Beleuchtung und Belüftungsmechanik (ein Elektromagnet öffnet/schließt eine Klappe, um den Gasaustausch mit der Außenluft zu Ermöglichen) im Gewächshaus verbaut. Damit das Gewächshaus erwärmt werden kann, steht es auf einer Aluminiumplatte, welche durch zwei kleine 12V Heizplatten erwärmt werden kann.
 
-![Bild](documentation/images/Modell_links.jpg)
+![Bild](documentation/images/modell_links.jpg)
 
 Die noch notwendige Mess- und Steuerelektronik befindet sich auf einer Lochrasterplatine unterhalb des DE2-Boards, wo sich auch eine Relaiskarte mit vier steuerbaren Relais sowie der Mikrocomputer namens Raspberry Pi befinden.
 
-Mehr Bilder gibt es in der [Bildergalerie]()
+Mehr Bilder gibt es in der [Bildergalerie](documentation/galery.md)
 
 
 ## Frontend

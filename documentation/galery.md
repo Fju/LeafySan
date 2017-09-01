@@ -1,11 +1,11 @@
 ## Bildgalerie
 
-![Modell von links](images/Modell_links.jpg)
+![Modell von links](images/modell_links.jpg)
 
-![Modell von rechts](images/Modell_rechts.jpg)
+![Modell von rechts](images/modell_rechts.jpg)
 
-![Ausgabe der Sensorwerte auf den Anzeigen](images/Modell_Anzeige.jpg)
+![Ausgabe der Sensorwerte auf den Anzeigen](images/modell_anzeige_1.jpg)
 
-![Ausgabe der Sensorwerte auf den Anzeigen](images/Modell_Anzeige_alt.jpg)
+![Ausgabe der Sensorwerte auf den Anzeigen](images/modell_anzeige_2.jpg)
 
-![Angeschaltete Beleuchtung](images/Modell_Licht.jpg)
+![Angeschaltete Beleuchtung](images/modell_beleuchtung.jpg)
