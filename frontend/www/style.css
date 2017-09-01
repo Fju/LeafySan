@@ -1,0 +1,153 @@
+@font-face {
+	font-family: "Montserrat";
+	font-style: normal;
+	font-weight: 400;
+	src: url("fonts/montserrat-v10-latin-regular.eot"); /* IE9 Compat Modes */
+	src: local("Montserrat Regular"), local("Montserrat-Regular"),
+		 url("fonts/montserrat-v10-latin-regular.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+		 url("fonts/montserrat-v10-latin-regular.woff2") format("woff2"), /* Super Modern Browsers */
+		 url("fonts/montserrat-v10-latin-regular.woff") format("woff"), /* Modern Browsers */
+		 url("fonts/montserrat-v10-latin-regular.ttf") format("truetype"), /* Safari, Android, iOS */
+		 url("fonts/montserrat-v10-latin-regular.svg#Montserrat") format("svg"); /* Legacy iOS */
+}
+html {
+	font-size: 16px;
+}
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: geometricPrecision;
+	-webkit-touch-callout: none;
+	-webkit-text-size-adjust: none;
+
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+
+	color: #333;
+
+	font-family: "Montserrat", Helvetica, Tahoma, Arial, sans-serif;
+	font-size: 1em;
+	font-weight: 400;
+	line-height: 1.5;
+	margin: 0px;
+	padding: 0px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+svg text {
+	font-family: "Montserrat", Helvetica, Tahoma, Arial, sans-serif;	
+}
+input[type="date"] {
+	padding: 0.25em;
+	font-size: inherit;
+}
+button {
+	cursor: pointer;
+	padding: 0.5em 1em;
+	min-width: 7em;
+	font-size: 0.9em;
+	background: white;
+	border: 0.15em solid #333;
+	color: #333;
+	font-weight: bold;
+	border-radius: 4px;
+	outline: none;
+	margin: 0 4px;
+	flex-grow: 0;
+}
+button:active, button:hover {
+	background: #333;
+	color: white;
+}
+button#selectLight {
+	border-color: #dc9e04;
+	color: #dc9e04;
+}
+button:hover#selectLight, button:active#selectLight {
+	background: #dc9e04;
+	color: white;
+}
+button#selectMoisture {
+	border-color: #178bca;
+	color: #178bca;
+}
+button:active#selectMoisture, button:hover#selectMoisture {
+	background: #178bca;
+	color: white;
+}
+button#selectTemperature {
+	border-color: #f44336;
+	color: #f44336;
+}
+button:active#selectTemperature, button:hover#selectTemperature {
+	background: #f44336;
+	color: white;
+}
+label > span {
+	display: inline-block;
+	min-width: 7em;
+}
+#linechart {
+	margin-left: 2.25em;
+}
+
+.spacer { flex-grow: 1; }
+.main {
+	flex-grow: 1;
+	padding: 1em 0;
+}
+.main-container {
+	max-width: 1080px;
+	margin: 0 auto;
+	padding: 0 1em;
+}
+.main-values {
+	margin: 2em 0;
+	display: flex;
+	flex-wrap: no-wrap;
+}
+.main-values-item {
+	min-width: 7.5em;
+	margin: 0 12px;
+	flex-grow: 1;
+	text-align: center;
+}
+.main-values-item svg {
+	max-height: 10em;
+	height: 100%;
+	width: 100%;
+}
+.main-values-item p {
+	margin: 0;
+}
+
+.main-archive-form {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+@media all and (max-width: 900px) {
+	html {
+		font-size: 1.8vw;
+	}
+	label > span {
+		min-width: 4em;
+	}
+}
+
+@media all and (max-width: 600px) {
+	label > span {
+		min-width: 0;
+		margin-right: 5px;
+	}
+	.main-values-item {
+		min-width: 5.5em;
+	}
+}

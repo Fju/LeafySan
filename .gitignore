@@ -1,0 +1,6 @@
+frontend/data_*.csv
+frontend/node_modules/
+*.vhdl.bak
+src/quartus/*/
+
+
