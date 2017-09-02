@@ -20,7 +20,8 @@ function LineChart(elementId) {
 	var colors = {
 		temperature: '#f44336',
 		moisture: '#178bca',
-		brightness: '#dc9e04'
+		brightness: '#dc9e04',
+		carbondioxide: '#669900'
 	};
 
 	var xAxis, yAxis, data, domainTimeline, currentGraph = 'temperature';
@@ -30,15 +31,11 @@ function LineChart(elementId) {
 
 	var line = d3.line().x(function(d) { return scaleX(d.date); }).y(function(d) { return scaleY(d[currentGraph]); }).curve(d3.curveBasis);
 
-
 	var svg_xAxis = g.append("g").attr("transform", "translate(0," + height + ")").attr('id', 'line-chart-x-axis');
 	var svg_yAxis = g.append("g").attr('id', 'line-chart-y-axis');
 	var svg_axisLabel = svg_yAxis.append("text").attr('id', 'line-chart-axis-lbl').attr("fill", "#000").attr("transform", "rotate(-90)").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end");	 
 	var svg_graph = g.append("g").attr("clip-path", "url(#clip)").append('path').attr('id', 'line-chart-graph').attr("fill", "none").attr("stroke-linejoin", "round").attr("stroke-width", 2);	
 	
-
-
-
 	var onzoom = function(changeDomain) {
 		var start = scaleX.domain()[0], end = scaleX.domain()[1];
 		if (!changeDomain) {
@@ -80,7 +77,8 @@ function LineChart(elementId) {
 				date: _date,
 				temperature: +d.temperature,
 				moisture: +d.moisture,
-				brightness: +d.brightness
+				brightness: +d.brightness,
+				carbondioxide: +d.carbondioxide
 			};
 		});
 		domainTimeline = d3.extent(data, function(d) { return d.date; });
@@ -98,16 +96,16 @@ function LineChart(elementId) {
 		//console.log(data);
 		var transition = d3.transition().duration(400).ease(d3.easeQuadOut);
 		if (newGraph === 'brightness') {
-			scaleY = d3.scaleLog().base(10).clamp(true);
+			scaleY.domain([0, 10000]);
+		} else if (newGraph === 'temperature') {
+			scaleY.domain([0, 40]);
+		} else if (newGraph === 'moisture') {
+			scaleY.domain([0, 100]);			
 		} else {
-			scaleY = d3.scaleLinear();
-		}
-
-		scaleY = scaleY.range([height, 0]).domain(d3.extent(data, function(d) { return d[currentGraph]; })).nice();
+			scaleY.domain([0, 5000]);
+		}	
 		
-		yAxis = d3.axisLeft(scaleY).tickFormat(function(d) { return d+''; });
-		if (newGraph === 'brightness') yAxis = yAxis.tickValues([1, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000]);
-
+		yAxis = d3.axisLeft(scaleY).tickFormat(function(d) { return d+''; });		
 		svg_yAxis.call(yAxis);
 		
 		transition.select('#line-chart-graph').attr('d', line).attr('stroke', colors[currentGraph]);

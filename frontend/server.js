@@ -28,13 +28,14 @@ if (config['list-serial-ports']) {
 }
 
 
-const ID_BRIGHTNESS = 1;
-const ID_MOISTURE = 2;
-const ID_TEMPERATURE = 3;
+const ID_BRIGHTNESS = 0;
+const ID_MOISTURE = 1;
+const ID_TEMPERATURE = 2;
+const ID_CARBONDIOXIDE = 3;
 var port = new SerialPort(config['serial-port'], { baudRate: 115200, autoOpen: false });
 
 var dummies = {
-		temperature: [], moisture: [], brightness: [],
+		temperature: [], moisture: [], brightness: [], carbondioxide: [],
 		toInt: function(array) {
 			var temp = 0, i;
 			for (i = 0; i != array.length; ++i) {
@@ -43,7 +44,7 @@ var dummies = {
 			return temp;
 		}
 	}, values = {
-		temperature: 200, moisture: 400, brightness: 50
+		temperature: 250, moisture: 430, brightness: 5550, carbondioxide: 2800
 	};
 
 port.open(function (err) {
@@ -56,6 +57,7 @@ port.on('readable', function () {
 		if (id === ID_BRIGHTNESS) key = 'brightness';
 		else if (id === ID_MOISTURE) key = 'moisture';
 		else if (id === ID_TEMPERATURE) key = 'temperature';
+		else if (id === ID_CARBONDIOXIDE) key = 'carbondioxide';
 
 		dummies[key][shift] = data;
 		if (shift === 3) values[key] = dummies.toInt(dummies[key]); 
@@ -67,18 +69,18 @@ setInterval(function() {
 
 	var date = new Date(), path = 'data_' + date.getFullYear() + '-' + (1+date.getMonth()) + '-' + date.getDate() + '.csv';
 	var copiedValues = {
-		t: values.temperature / 10, m: (Math.min(1, Math.max(0, (values.moisture - 340) / (580 - 340))) * 100).toFixed(1), b: values.brightness
+		t: values.temperature / 10, m: (Math.min(1, Math.max(0, (values.moisture - 340) / (580 - 340))) * 100).toFixed(1), b: values.brightness, c: values.carbondioxide
 	};
 	if (!fs.existsSync(path)) {
-		fs.writeFile(path, 'time,temperature,moisture,brightness\n', (err) => {
+		fs.writeFile(path, 'time,temperature,moisture,brightness,carbondioxide\n', (err) => {
 			if (err) throw err;
-			console.log('Created nwe data file succesfully!');			
+			console.log('Created new data file succesfully!');			
 		});
 	}
 	fs.readFile(path, (err, data) => {
 		if (err) throw err;
 		else {
-			var newData = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + ',' + copiedValues.t + ',' + copiedValues.m + ',' + copiedValues.b;
+			var newData = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + ',' + copiedValues.t + ',' + copiedValues.m + ',' + copiedValues.b + ',' + copiedValues.c;
 			console.log('Writing: ' + newData);
 			fs.writeFile(path, data + newData + '\n', (e) => {
 				if (e) throw e;
@@ -132,7 +134,8 @@ wss.on('connection', (ws, req) => {
 				data: {
 					brightness: values.brightness,
 					moisture: (Math.min(1, Math.max(0, (values.moisture - 340) / (580 - 340))) * 100).toFixed(1),
-					temperature: values.temperature / 10
+					temperature: values.temperature / 10,
+					carbondioxide: values.carbondioxide
 				}
 			}));
 		} else if (json.type === 'archive') {
