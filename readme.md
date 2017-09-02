@@ -22,11 +22,11 @@ __verwendete Aktoren:__
 
 Die Elektronik wurde auf einer Holzplatte mit Schrauben und Stelzen befestigt, damit bei einem Wasserleck nicht die sich auf dem Boden befindliche Elektronik beschädigt wird. Damit die Funktionsweise der einzelnen Sensoren und Aktoren demonstriert werden kann, wurde ein "Gewächshaus" angefertigt, das aus einem Aluminiumboden und einer Acrylglas-Haube besteht. Darin befindet sich Blumenerde, die von einem kleinen Schlauchsystem bewässert wird, sowie der Bodenfeuchte-Sensor, der die Feuchtigkeit des Boden nicht-kapazitiv misst. Außerdem wurde die Beleuchtung und Belüftungsmechanik (ein Elektromagnet öffnet/schließt eine Klappe, um den Gasaustausch mit der Außenluft zu Ermöglichen) im Gewächshaus verbaut. Damit das Gewächshaus erwärmt werden kann, steht es auf einer Aluminiumplatte, welche durch zwei kleine 12V Heizplatten erwärmt werden kann.
 
-![Bild](documentation/images/modell_links.jpg)
+![Bild](dokumentation/bilder/modell_links.jpg)
 
 Die noch notwendige Mess- und Steuerelektronik befindet sich auf einer Lochrasterplatine unterhalb des DE2-Boards, wo sich auch eine Relaiskarte mit vier steuerbaren Relais sowie der Mikrocomputer namens Raspberry Pi befinden.
 
-Mehr Bilder gibt es in der [Bildergalerie](documentation/galery.md)
+Mehr Bilder gibt es in der [Bildergalerie](dokumentation/gallerie.md)
 
 
 ## Frontend
@@ -39,25 +39,26 @@ An dieser Stelle großen Dank an [Phil Martins Tutorial "Using your new Raspberr
 Nachdem der Pi als Access Point eingerichtet wurde, muss der Javascript Code des Servers mithilfe von NodeJS ausgeführt werden, damit das Frontend über den Pi erreichbar ist. Wenn alles richtig eingestellt und ausgeführt wurde, ist die Seite nach Verbinden mit dem Access Point des Pi's unter `http://192.168.2.1:8000` aufrufbar.
 Das Design der Seite wurde auch für mobile Geräte, wie z. B. Tablets oder Smartphone jeglicher Bildschirmgrößen, optimiert.
 
-![Desktop Ansicht und mobile Ansicht im Vergleich](documentation/images/responsiveness.jpg)
+![Desktop Ansicht und mobile Ansicht im Vergleich](dokumentation/bilder/frontend.jpg)
 
-Mehr zur Umsetzung: *Link zur näheren Beschreibung der Umsetzung*
+[Mehr zur Umsetzung und zum Ausführen der Server Applikation](dokumentation/frontend.md)
 
 
 ## Stromversorgung
 
-Damit das DE2-Entwicklerboard von Altera, sowie der Raspberry Pi 3 und die Aktoren mit ausreichend Strom versorgt werden, wurde ein altes ATX Computer-Netzteil modifiziert, um die Stromversorgung zu garantieren. Um die Versorgungsspannungen 3.3V, 5V und 12V zu nutzen, musste jedoch die "Power Supply On" (Violett) Leitung mit Ground (Schwarz) verbunden werden, damit die 3.3V (Orange), 5V (Rot) und 12V (Gelb) Schiene aktiv sind. Außerdem wurde ein 11W [Leistungswiderstand](https://www.reichelt.de/11-Watt-axial/11W-AXIAL-4-7/3/index.html?ACTION=3&LA=446&ARTICLE=1524&GROUPID=3120&artnr=11W+AXIAL+4%2C7&SEARCH=11W%2BAXIAL%2B4%252C7) mit 4,7 Ohm direkt innerhalb des Netzteilgehäuses fixiert und mit Ground und 5V verbunden, damit eine Grundbelastung von ca. 1A vorherrscht. Dies wird empfohlen, um das Netzteil richtig zu nutzen.
+Damit das DE2-Entwicklerboard von Altera, sowie der Raspberry Pi 3 und die Aktoren mit ausreichend Strom versorgt werden, wurde ein altes ATX Computer-Netzteil modifiziert, um die Stromversorgung zu garantieren. Um die Versorgungsspannungen 3,3 V, 5 V und 12 V zu nutzen, musste jedoch die "Power Supply On" (Violett) Leitung mit Ground (Schwarz) verbunden werden, damit die 3,3 V (Orange), 5 V (Rot) und 12 V (Gelb) Schiene aktiv sind. Außerdem wurde ein 11W [Leistungswiderstand](https://www.reichelt.de/11-Watt-axial/11W-AXIAL-4-7/3/index.html?ACTION=3&LA=446&ARTICLE=1524&GROUPID=3120&artnr=11W+AXIAL+4%2C7&SEARCH=11W%2BAXIAL%2B4%252C7) mit 4,7 Ohm direkt innerhalb des Netzteilgehäuses fixiert und mit Ground und 5 V verbunden, damit eine Grundbelastung von ca. 1 A vorherrscht. Dies wird empfohlen, um das Netzteil richtig zu nutzen.
 Welche Kabelfarben des ATX-Formates wofür stehen kann man [hier](https://de.wikipedia.org/wiki/ATX-Format#Pinbelegung) einsehen.
 
 Für folgende Komponenten wurden die benannten Versorgungsspannungen benötigt:
 
-|    3.3V                |     5V         |    12V          |
-|------------------------|----------------|-----------------|
-| Sensoren               | Raspberry Pi 3 | LED-Beleuchtung |
-| Relaismodul            | Relais         | Lüfter          |
-| _restliche Elektronik_ |                | Pumpe           |
-|                        |                | Heizung         |
-Teilweise wurden die 3.3V auch vom DE2-Board abgegriffen. Dieses wird wiederum vom Netzteil mit 12V betrieben.
+|    3,3 V                |     5 V         |    12 V                            |
+|-------------------------|-----------------|------------------------------------|
+| Temperatursensor        | Raspberry Pi 3  | LED-Beleuchtung                    |
+| Feuchte-Sensor          | Relais          | Belüftung (Lüfter + Elektromagnet) |
+| Helligkeitssensor       | CO2-Sensor      | Bewässerungspumpe                  |
+| Relaisansteuerung       |                 | Heizung                            |
+
+Teilweise wurden die 3,3 V auch vom DE2-Board abgegriffen. Dieses wird wiederum vom Netzteil mit 12V betrieben.
 
 
 ## Sponsoren

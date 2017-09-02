@@ -7,7 +7,7 @@ const SerialPort		= require('serialport');
 const commandLineArgs	= require('command-line-args')
  
 const optionDefinitions = [
-	{ name: 'list-serial-ports', type: Boolean },
+	{ name: 'list-serial-ports', alias: 'l', type: Boolean },
 	{ name: 'serial-port', alias: 's', type: String, defaultValue: '/dev/ttyUSB0' },
 	{ name: 'write-data', alias: 'd', type: Boolean },
 	{ name: 'http-port', alias: 'h', type: Number, defaultValue: 8000 }
