@@ -6,4 +6,4 @@ src/quartus/db/
 src/quartus/incremental_db/
 src/quartus/simulation/
 src/quartus/PLLJ_PLLSPE_INFO.txt
-
+*.odt

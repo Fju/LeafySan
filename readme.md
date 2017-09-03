@@ -1,6 +1,6 @@
 # LeafySan
 
-LeafySan - ein vollautomatisiertes Gewächshaus gesteuert und überwacht durch einen FPGA-Chip. Dieses Projekt wurde im Zuge des bundesweiten Nachwuchswettbewerbes "Invent a Chip" im Jahr 2017 erstellt. Mithilfe der Hardwarebeschreibungssprache [VHDL](https://de.wikipedia.org/wiki/Very_High_Speed_Integrated_Circuit_Hardware_Description_Language) und einem DE2-Board von Altera wurde das Auslesen der Sensoren und Steuern der Aktoren umgesetzt. Des weiteren werden Sensordaten an einen Linux Mikrocomputer namens Raspberry Pi gesendet, welcher diese Daten speichert. Die Daten können auf mobilen Geräten wie Tablets oder Smartphones sowie Laptops im Browser abgerufen werden.
+LeafySan - ein vollautomatisiertes Gewächshaus gesteuert und überwacht durch einen FPGA-Chip. Dieses Projekt wurde im Zuge des bundesweiten Nachwuchswettbewerbes "Invent a Chip" im Jahr 2017 erstellt. Mithilfe der Hardwarebeschreibungssprache [VHDL](https://de.wikipedia.org/wiki/Very_High_Speed_Integrated_Circuit_Hardware_Description_Language) und einem DE2-Board von Altera wurde das Auslesen der Sensoren und Steuern der Aktoren umgesetzt. Des weiteren werden Sensordaten an einen Raspberry Pi gesendet, welcher diese Daten speichert. Die Daten können auf mobilen Geräten wie Tablets oder Smartphones sowie Laptops im Browser abgerufen werden.
 
 __FPGA Entwicklungsboard:__
 * [Altera DE2-115 Board](http://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&No=502)

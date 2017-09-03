@@ -25,8 +25,8 @@ Bei dem Temperatursensor handelt es sich um einen PT1000 Thermistor, welcher bei
 
 ![Schaltplan für das Auslesen des Platin-Messwiderstandes](bilder/schaltplan_adc.png)
 
-Der Platin-Messwiderstand befindet sich in einer [Wheatstone'schen Messbrücke](https://de.wikipedia.org/wiki/Wheatstonesche_Messbr%C3%BCcke). Bei einer Temperatur von 0 °C beträgt die Spannungsdifferenz der Messbrücke 0 V. Insofern eine höhere Temperatur erreicht wird, erhöht sich die Spannungsdifferenz, welche durch den rechten Operationsverstärker aufgrund der Widerstandsanordnung (1 kOhm, 100 kOhm) hundertfach verstärkt wird. Die mittleren Operationsverstärker dienen zur [Impedanzwandlung](https://de.wikipedia.org/wiki/Impedanzwandler). Die Operationsverstärker werden mit einer gepufferten 3,3 V Spannung versorgt (ganz linkes Schaltbild).
-Nach der hundertfachen Verstärkung durch einen Operationsverstärker kann die resultierende Spannung durch einen ADC (**A**nalog-to-**D**igital **C**onverter) in einen digitalen Wert umgewandelt werden. Die Auflösung dieses ADC sind 12-bit, das heißt bei Null-Potenzial beträgt der Wert 0, bei einer Eingangsspannung von 3,3 V ist der digitale Wert 4095. Nach einer Messung bei Zimmertemperatur wurde der lineare Zusammenhang zwischen digitalem Wert und Temperaturwert in Celsius ermittelt. Mithilfe dieses Codes wird der eingelesene digitale Wert in die Einheit Temperatur umgewandelt:
+Der Platin-Messwiderstand befindet sich in einer [Wheatstone'schen Messbrücke](https://de.wikipedia.org/wiki/Wheatstonesche_Messbr%C3%BCcke). Bei einer Temperatur von 0 °C beträgt die Spannungsdifferenz der Messbrücke 0 V. Insofern eine höhere Temperatur erreicht wird, erhöht sich die Spannungsdifferenz, welche durch die Operationsverstärker aufgrund der Widerstandsanordnung (1 kOhm, 100 kOhm) hundertfach verstärkt wird. Die Operationsverstärker werden mit einer durch einen Kondensator entkoppelten 3,3 V Spannung versorgt (linkes Schaltbild). Die Gesamte Schaltung bezeichnet man als Instrumentationsverstärker-Schaltung.
+Nach der hundertfachen Verstärkung kann die resultierende Spannung durch einen ADC (**A**nalog-to-**D**igital **C**onverter) in einen digitalen Wert umgewandelt werden. Die Auflösung dieses ADC sind 12-bit, das heißt bei Null-Potenzial beträgt der Wert 0, bei einer Eingangsspannung von 3,3 V ist der digitale Wert 4095. Nach einer Messung bei Zimmertemperatur wurde der lineare Zusammenhang zwischen digitalem Wert und Temperaturwert in Celsius ermittelt. Mithilfe dieses Codes wird der eingelesene digitale Wert in die Einheit Temperatur umgewandelt:
 ```vhdl
 heating_temp_nxt <= resize(shift_right(unsigned(temp_value) * 74043 + 131072, 18), heating_temp'length);
 -- Beispiel: temp_value = 1200
@@ -67,7 +67,7 @@ Die Tabelle soll den Kommunikationsablauf näher verdeutlichen:
 | REG_CONTROL (*0x80*)  | POWER_ON (*0x03*)  | aktiviert den Sensor |
 |           -           | -                  | warte 400 ms, damit der Sensor booten kann |
 | REG_TIMING (*0x81*)   | HIGH_GAIN, INT_101 (*0x11*) | setzt Verstärkung auf 16x und Integrationszeit auf 101ms |
-| -                     | -                  | warte 800 ms, damit der Sensor liefern kann (Integrationszeit) |
+| -                     | -                  | warte 800 ms, damit der Sensor integre Werte liefern kann (Integrationszeit) |
 | REG_CHANNEL0L (*0x8C*) | *kein Kommando-Byte* | Lesen des tiefen Bytes des ersten Kanals  |
 | REG_CHANNEL0H (*0x8D*) | *kein Kommando-Byte* | Lesen des hohen Bytes des ersten Kanals   |
 | REG_CHANNEL1L (*0x8E*) | *kein Kommando-Byte* | Lesen des tiefen Bytes des zweiten Kanals |
@@ -89,7 +89,7 @@ VHDL-Implementierung: [src/vhdl/modules/moisture_sensor.vhdl](../src/vhdl/module
 
 Der Feuchte-Sensor wird jede Sekunde von dem DE2-Board ausgelesen und gibt einen 16-bit Wert an den Master zurück, der für gewöhnlich zwischen 300 und 700 liegt. Leider gibt es keine vergleichbare Einheit, die eine Aussage über die Bodenfeuchte geben kann, weshalb der Nullpunkt bei dem Wert 370 angenommen wird und der höchste Wert bei 600 liegen soll, was 100 % entsprechen soll. Folgende Wertetabelle zeigt gemessene Referenzwerte:
 
-| Zustand  | Werte (min.) | Werte (max.) |
+| Zustand  | Wert (min.) | Wert (max.) |
 |----------|---------|--------------|
 | in Luft  | 300 | 320 |
 | in trockener Erde | 365 | 375 |
@@ -144,6 +144,9 @@ Bei der Steuerung der Bewässerung musste beachtet werden, dass sich das Wasser 
 
 ![Zustandsdiagramm zur Steuerung der Bewässerung](diagramme/zustandsdiagramm_bewässerung.png)
 
+Da die Pumpe zwar bei 12 V betrieben werden kann, jedoch manchmal nicht anläuft, wurde die Spannung mithilfe dieses [Step-Up Converter](https://www.amazon.de/Spannung-10-32v-Converter-Step-Up-Adjustable/dp/B00HV43UOG/ref=pd_sbs_23_2?_encoding=UTF8&psc=1&refRID=S9RD24657F1FBKV7JMSC) auf 24 V erhöht. Damit gibt es keine Schwierigkeiten beim Anlaufen der Pumpe und eine zuverlässige Bewässerung ist garantiert.
+
+
 #### 2.3. Belüftung
 
 Die Belüftung besteht aus einem Elektromagneten, der ein Fenster öffnet und schließt, und einem kleinen Axial-Lüfter, der den Gasaustausch mit der Außenluft begünstigen soll. Beide Komponenten werden mit einem Relais gesteuert. Da dieser Mechanismus von keiner gemessenen Größe beeinflusst wird, basiert es auf einem zeitlich festgelegten Schließ-/Öffnungsablauf. Das heißt, dass die Belüftung immer aller 15 Minuten für 5 Minuten aktiv ist. Das Zustandsdiagramm ist demnach auch recht simpel:
@@ -156,17 +159,20 @@ Zwischen den beiden an der Heizplatte liegenden Heizfolien befindet sich der Tem
 
 ![Zustandsdiagramm zur Steuerung der Heizung](diagramme/zustandsdiagramm_heizung.png)
 
-#### 2.5. Stromverbrauch
-
-| Aktorik  | Stromstärke |
-|----------|-------------|
-| Lüfter und Elektromagnet | - |
-| Heizfolien | 2 A |
-| Pumpe | 700 mA |
-| Beleuchtung | 188 mA |
-
-
-Da die Pumpe zwar bei 12 V betrieben werden kann, jedoch manchmal nicht anläuft, wurde mithilfe dieses [Step-Up Converter](https://www.amazon.de/Spannung-10-32v-Converter-Step-Up-Adjustable/dp/B00HV43UOG/ref=pd_sbs_23_2?_encoding=UTF8&psc=1&refRID=S9RD24657F1FBKV7JMSC) auf 24 V erhöht. Damit gibt es keine Schwierigkeiten beim Anlaufen der Pumpe und eine zuverlässige Bewässerung ist garantiert.
-
 ### 3. Resourcennutzung
 
+Der "Compilation Report" nach der Synthese des VHDL Codes verdeutlicht, dass nur ein Bruchteil der zur Verfügung stehenden logischen Elemente oder des verfügbaren Speichers letztlich genutzt werden. Das bedeutet, dass das Projekt auf einem deutlich kleineren Chip als den des DE2-Boardes umgesetzt werden kann.
+
+![Quartus' Compilation Report nach erfolgreicher Synthese](bilder/compilation_report.png)
+
+### 4. Stromverbrauch
+
+Das gesamte Modell verbraucht circa 60 W, was hauptsächlich an dem hohen Verbrauch des Computernetzteiles liegt (24 W). Dieser tritt auf, wenn keine Peripherie eingeschalten ist, das heißt im "Stand-By". Es ist deshalb für diese Anwendung aufgrund des Verbrauches ungeeignet. In dieser Hinsicht gäbe es weitaus effizientere Netzteile, die man verwenden könnte.
+Das DE2-Board inklusive der gesamten Sensorik benötigt gerade einmal 4 W und hat damit einen weitaus besseren und effizienten Verbrauch. Hier eine Liste mit den Verbrauch der restlichen Komponenten.
+
+| Aktorik                  | Stromstärke | Leistung |
+|--------------------------|-------------|----------|
+| Lüfter und Elektromagnet | 200 mA      | 2,4 W    |
+| Heizfolien               | 2000 mA     | 24 W     |
+| Wasserpumpe              | 700 mA      | 8,4 W    |
+| Beleuchtung              | 188 mA      | 2,25 W   |
