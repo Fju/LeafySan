@@ -1,6 +1,6 @@
 # LeafySan
 
-Ein vollautomatisiertes Gewächshaus gesteuert und überwacht durch einen FPGA-Chip. Dieses Projekt wurde im Zuge des bundesweiten Nachwuchswettbewerbes "Invent a Chip" im Jahr 2017 erstellt. Mithilfe der Hardwarebeschreibungssprache [VHDL](https://de.wikipedia.org/wiki/Very_High_Speed_Integrated_Circuit_Hardware_Description_Language) und einem DE2-Board von Altera wurde das Auslesen der Sensoren und Steuern der Aktoren umgesetzt. Des weiteren werden Sensordaten an einen Linux Mikrocomputer namens Raspberry Pi gesendet, welcher die Daten speichert. Diese Daten können auf mobilen Geräten wie Tablets oder Smartphones sowie Laptops im Browser abgerufen werden.
+LeafySan - ein vollautomatisiertes Gewächshaus gesteuert und überwacht durch einen FPGA-Chip. Dieses Projekt wurde im Zuge des bundesweiten Nachwuchswettbewerbes "Invent a Chip" im Jahr 2017 erstellt. Mithilfe der Hardwarebeschreibungssprache [VHDL](https://de.wikipedia.org/wiki/Very_High_Speed_Integrated_Circuit_Hardware_Description_Language) und einem DE2-Board von Altera wurde das Auslesen der Sensoren und Steuern der Aktoren umgesetzt. Des weiteren werden Sensordaten an einen Linux Mikrocomputer namens Raspberry Pi gesendet, welcher diese Daten speichert. Die Daten können auf mobilen Geräten wie Tablets oder Smartphones sowie Laptops im Browser abgerufen werden.
 
 __FPGA Entwicklungsboard:__
 * [Altera DE2-115 Board](http://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&No=502)
@@ -15,12 +15,12 @@ __verwendete Aktoren:__
 * [Lüfter (12V, 40x40mm)](https://www.reichelt.de/Luefter/FAN-ML-4010-12-S/3/index.html?ACTION=3&LA=446&ARTICLE=110411&GROUPID=7775&artnr=FAN-ML+4010-12+S&SEARCH=FAN-ML%2B4010-12%2BS)
 * Wasserpumpe
 * [2x Heizung (12V, 12W, 77x110mm)](https://www.conrad.de/de/polyester-heizfolie-selbstklebend-12-vdc-12-vac-12-w-schutzart-ipx4-l-x-b-110-mm-x-77-mm-thermo-532878.html)
-* [roter und blauer LED-Streifen (jeweils 25cm Länge)](http://www.ledlager.de/led-streifen)
+* [2x LED-Streifen (jeweils 25cm Länge)](http://www.ledlager.de/led-streifen)
 
 
 ## Modell und Projektaufbau
 
-Die Elektronik wurde auf einer Holzplatte mit Schrauben und Stelzen befestigt, damit bei einem Wasserleck nicht die sich auf dem Boden befindliche Elektronik beschädigt wird. Damit die Funktionsweise der einzelnen Sensoren und Aktoren demonstriert werden kann, wurde ein "Gewächshaus" angefertigt, das aus einem Aluminiumboden und einer Acrylglas-Haube besteht. Darin befindet sich Blumenerde, die von einem kleinen Schlauchsystem bewässert wird, sowie der Bodenfeuchte-Sensor, der die Feuchtigkeit des Boden nicht-kapazitiv misst. Außerdem wurde die Beleuchtung und Belüftungsmechanik (ein Elektromagnet öffnet/schließt eine Klappe, um den Gasaustausch mit der Außenluft zu Ermöglichen) im Gewächshaus verbaut. Damit das Gewächshaus erwärmt werden kann, steht es auf einer Aluminiumplatte, welche durch zwei kleine 12V Heizplatten erwärmt werden kann.
+Die Elektronik wurde auf einer Holzplatte mit Schrauben und Stelzen befestigt, damit bei einem Wasserleck nicht die sich auf dem Boden befindliche Elektronik beschädigt wird. Um die Funktionsweise der einzelnen Sensoren und Aktoren zu demonstrieren, wurde ein "Gewächshaus" angefertigt, das aus einem Aluminiumboden und einer Acrylglas-Haube besteht. Darin befindet sich Blumenerde, die von einem kleinen Schlauchsystem bewässert wird, sowie der Bodenfeuchte-Sensor, der die Feuchtigkeit des Boden nicht-kapazitiv misst. Außerdem wurde die Beleuchtung und Belüftungsmechanik (ein Elektromagnet öffnet/schließt eine Klappe, um den Gasaustausch mit der Außenluft zu ermöglichen) im Gewächshaus verbaut. Damit das Gewächshaus erwärmt werden kann, steht es auf einer Aluminiumplatte, welche durch zwei kleine 12V Heizplatten erwärmt werden kann.
 
 ![Bild](dokumentation/bilder/modell_links.jpg)
 
@@ -46,8 +46,8 @@ Das Design der Seite wurde auch für mobile Geräte, wie z. B. Tablets oder Smar
 
 ## Stromversorgung
 
-Damit das DE2-Entwicklerboard von Altera, sowie der Raspberry Pi 3 und die Aktoren mit ausreichend Strom versorgt werden, wurde ein altes ATX Computer-Netzteil modifiziert, um die Stromversorgung zu garantieren. Um die Versorgungsspannungen 3,3 V, 5 V und 12 V zu nutzen, musste jedoch die "Power Supply On" (Violett) Leitung mit Ground (Schwarz) verbunden werden, damit die 3,3 V (Orange), 5 V (Rot) und 12 V (Gelb) Schiene aktiv sind. Außerdem wurde ein 11W [Leistungswiderstand](https://www.reichelt.de/11-Watt-axial/11W-AXIAL-4-7/3/index.html?ACTION=3&LA=446&ARTICLE=1524&GROUPID=3120&artnr=11W+AXIAL+4%2C7&SEARCH=11W%2BAXIAL%2B4%252C7) mit 4,7 Ohm direkt innerhalb des Netzteilgehäuses fixiert und mit Ground und 5 V verbunden, damit eine Grundbelastung von ca. 1 A vorherrscht. Dies wird empfohlen, um das Netzteil richtig zu nutzen.
-Welche Kabelfarben des ATX-Formates wofür stehen kann man [hier](https://de.wikipedia.org/wiki/ATX-Format#Pinbelegung) einsehen.
+Damit das DE2-Entwicklerboard von Altera, sowie der Raspberry Pi 3 und die Aktoren mit ausreichend Strom versorgt werden, wurde ein altes ATX Computer-Netzteil modifiziert, um die Stromversorgung zu garantieren. Damit man die Versorgungsspannungen 3,3 V, 5 V und 12 V nutzen kann, musste jedoch die "Power Supply On" (Violett) Leitung mit Ground (Schwarz) verbunden werden, damit die 3,3 V (Orange), 5 V (Rot) und 12 V (Gelb) Schienen aktiv sind. Außerdem wurde ein 11W [Leistungswiderstand](https://www.reichelt.de/11-Watt-axial/11W-AXIAL-4-7/3/index.html?ACTION=3&LA=446&ARTICLE=1524&GROUPID=3120&artnr=11W+AXIAL+4%2C7&SEARCH=11W%2BAXIAL%2B4%252C7) mit 4,7 Ohm direkt innerhalb des Netzteilgehäuses fixiert und mit Ground und 5 V verbunden, damit eine Grundbelastung von ca. 1 A vorherrscht. Dies wird empfohlen, um das Netzteil richtig zu nutzen.
+Welche Kabelfarben des ATX-Formates wofür stehen, kann man [hier](https://de.wikipedia.org/wiki/ATX-Format#Pinbelegung) einsehen.
 
 Für folgende Komponenten wurden die benannten Versorgungsspannungen benötigt:
 
@@ -64,5 +64,5 @@ Teilweise wurden die 3,3 V auch vom DE2-Board abgegriffen. Dieses wird wiederum 
 ## Sponsoren
 
 - [Creative Factory GmbH Großenhain](http://creative-factory-gmbh.de/)
-- Sebastian Fischer, MdL
+- Sebastian Fischer, MdL (CDU)
 

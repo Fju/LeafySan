@@ -1,10 +1,10 @@
-## Den Raspberry Pi als Access Point einrichten
+## Frontend
 
-Die folgenden Schritte wurden auf dem Raspberry Pi 3 mit dem Betriebssystem Raspbian "Jessie" getestet. Bei anderer Verwendung von Hard- und Software kann es sein, dass die Einrichtung nicht vollkommen gelingt.
+Die folgenden Schritte wurden auf dem Raspberry Pi 3 mit dem Betriebssystem Raspbian "Jessie" getestet, um den Mikrocomputer als Access Point einzurichten und das Frontend zu hosten.
 
 ### 1. Installation
 
-Damit der Raspberry Pi als Access Point die Webseite mithile des NodeJS Frameworks darstellen kann müssen die Pakete `dnsmasq` und `hostapd` installiert sein.
+Damit der Raspberry Pi als Access Point die Webseite mithilfe des NodeJS Frameworks darstellen kann, müssen die Pakete `dnsmasq` und `hostapd` installiert sein.
 Falls diese noch nicht vorhanden sind, können diese mit dem folgenden Befehl heruntergeladen werden:
 ```
 sudo apt-get install dnsmasq hostapd
@@ -29,22 +29,16 @@ Für diese Konfiguration wurde dieses [Tutorial "Using your new Raspberry Pi 3 a
 
 ### 3. Webserver starten
 
-Damit der Webserver gestartet werden kann, muss zunächst der Programmcode des Backends heruntergeladen werden. Dafür klonen Sie zuerst dieses Github-Repository auf ihrem Raspberry Pi und navigieren in das Verzeichnis des Quellcodes des Frontends mit den Befehlen:
-``` bash
-git clone https://github.com/Fju/LeafySan/
-cd LeafySan/frontend
-```
-Mithilfe des NodeJS Frameworks wird es uns ermöglicht, einen einfachen HTTP-Server auf dem Raspberry Pi aufzusetzen, den man über WLAN erreichen kann. Bevor allerdings der Server gestartet werden kann, müssen noch die sogenannten "node modules" namens `ws`, `command-line-args` und `serialport` heruntergeladen werden. Dies erfolgt automatisch durch das Ausführen des Befehls
+Den Quelltext für die Serverapplikation befindet sich im Ordner `frontend/`. Mithilfe des NodeJS Frameworks wird es ermöglicht, einen einfachen HTTP-Server auf dem Raspberry Pi aufzusetzen, den man über WLAN erreichen kann. Bevor allerdings der Server gestartet werden kann, müssen noch die sogenannten "node modules" namens `ws`, `command-line-args` und `serialport` heruntergeladen werden. Dies erfolgt automatisch durch das Ausführen des Befehls
 ``` bash
 npm install
 ```
-Die Module werden allerdings nur automatisch installiert, wenn sie sich im Verzeichnis `frontend/` befinden.
 
 Schließlich kann der Server mithilfe des Befehls
 ``` bash
 node server.js
 ```
-gestartet werden. Falls sie mit dem Raspberry Pi über WLAN verbunden sind, sollten Sie nun eine Webseite unter `http://192.168.2.1:8000` erreichen können, insofern die statische IP-Addresse des Raspberry Pi auf `192.168.2.1` gesetzt wurde.
+gestartet werden. Falls sie mit dem Raspberry Pi über WLAN verbunden sind, sollte man nun eine Webseite unter `http://192.168.2.1:8000` erreichen können, insofern die statische IP-Addresse des Raspberry Pi auf `192.168.2.1` gesetzt wurde.
 
 ### 4. Webserver-Optionen
 
@@ -75,7 +69,7 @@ node server.js -d
 ```
 
 **--http-port=[zahl], -h=[zahl]**
-Der HTTP-Server kommuniziert über einen bestimmten Port. Für HTTP-Server ist dieser meistens 80, allerdings wird dieser in den meisten Fällen blockiert, um den Computer zu schützen. Mit dieser Option kann eine beliebige Zahl als Port verwendet werden. Wenn man zum Beispiel den Port 2134 verwenden möchte, nutzt man folgenden Befehl, um den Server zu starten:
+Der HTTP-Server kommuniziert über einen bestimmten Port. Für HTTP-Server ist dieser meistens 80, allerdings wird dieser in den meisten Fällen blockiert, um den Computer zu schützen. Bei dieser Option kann eine beliebige Zahl als Port verwendet werden. Wenn man zum Beispiel den Port 2134 verwenden möchte, nutzt man folgenden Befehl, um den Server zu starten:
 ``` bash
 node server.js --http-port=2134
 # oder
