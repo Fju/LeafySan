@@ -14,10 +14,9 @@ entity peripherals is
 	port(
 		clock			: in  std_ulogic;
 		reset			: in  std_ulogic;
-		enabled			: in std_ulogic;
-		temperature		: in unsigned(11 downto 0);
-		brightness		: in unsigned(15 downto 0);
-		moisture		: in unsigned(15 downto 0);
+		temperature		: in  unsigned(11 downto 0);
+		brightness		: in  unsigned(15 downto 0);
+		moisture		: in  unsigned(15 downto 0);
 		
 		lighting_on		: out std_ulogic;
 		heating_on		: out std_ulogic;
@@ -34,7 +33,7 @@ architecture rtl of peripherals is
 	constant HEATING_TIMEOUT_CLOCK_COUNT	: natural := 180; 	-- 3min
 	constant WATERING_DELAY_CLOCK_COUNT		: natural := 60; 	-- 60s
 	constant WATERING_TIMEOUT_CLOCK_COUNT	: natural := 180; 	-- 3min	
-	constant VENTILATION_DELAY_COUNT		: natural := 1800;	-- 30min
+	constant VENTILATION_DELAY_COUNT		: natural := 900;	-- 15min
 	constant VENTILATION_TIMEOUT_COUNT		: natural := 300;	-- 5min
 
 	type timer_state_t is (S_TIMER_RUNNING, S_TIMER_FINISHED);
@@ -156,12 +155,12 @@ begin
 	process(timer_pulse, lighting_clock, lighting_current, lighting_next, brightness)
 	begin
 		-- hold previous values
-		lighting_clock_nxt	<= lighting_clock;
+		lighting_clock_nxt		<= lighting_clock;
 		lighting_next_nxt		<= lighting_next;
 		lighting_current_nxt	<= lighting_current;
 		
 		-- `off` by default
-		lighting_on				<= lighting_current;		
+		lighting_on <= lighting_current;		
 		if timer_pulse = '1' then
 			if lighting_clock = to_unsigned(LIGHTING_CYCLE_CLOCK_COUNT - 1, lighting_clock'length) then
 				-- reset clock and update registers
@@ -206,7 +205,7 @@ begin
 				end if;
 			when S_WATERING_ON =>
 				watering_on	<= '1';
-				-- power off watering if temperature is 0.2 degree above the desired value
+				-- power off watering if moisture is above threshold
 				if moisture >= to_unsigned(WATERING_THRESHOLD, moisture'length) then
 					watering_state_nxt	<= S_WATERING_DELAY;
 					watering_clock_nxt	<= (others => '0');

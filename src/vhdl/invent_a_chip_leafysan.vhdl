@@ -147,7 +147,6 @@ architecture rtl of invent_a_chip is
 		port(
 			clock				: in  std_ulogic;
 			reset				: in  std_ulogic;	
-			enabled				: in  std_ulogic;
 			temperature			: in  unsigned(11 downto 0);
 			brightness			: in  unsigned(15 downto 0);
 			moisture			: in  unsigned(15 downto 0);			
@@ -223,7 +222,6 @@ architecture rtl of invent_a_chip is
 	signal peripherals_watering_on			: std_ulogic;
 	signal peripherals_lighting_on			: std_ulogic;
 	signal peripherals_ventilation_on		: std_ulogic;
-	signal peripherals_enabled				: std_ulogic;
 	
 	-- registers to create blinking led effect
 	signal warning_clock, warning_clock_nxt	: unsigned(to_log2(WARNING_CLOCK_TICKS) - 1 downto 0);
@@ -285,7 +283,6 @@ begin
 		port map (
 			clock			=> clock,
 			reset			=> reset,
-			enabled			=> peripherals_enabled,
 			temperature		=> adc_temperature,
 			brightness		=> light_value,
 			moisture		=> moist_moisture,			
@@ -329,53 +326,55 @@ begin
 	end process;
 
 	-- GPIO process
-	process(gp_in, switch, peripherals_heating_on, peripherals_lighting_on, peripherals_watering_on,
+	process(peripherals_ventilation_on, peripherals_heating_on, peripherals_lighting_on, peripherals_watering_on,
 			moist_clk_ctrl, moist_clk_in, moist_clk_out, moist_dat_ctrl, moist_dat_in, moist_dat_out,
 			light_clk_ctrl, light_clk_in, light_clk_out, light_dat_ctrl, light_dat_in, light_dat_out,
-			warning_clock, warning_led)
+			warning_clock, warning_led, gp_in, switch)
 	begin
 		-- safety / development / debug switches
-		led_green(0) <= switch(0);
-		led_green(1) <= not(gp_in(8));
+		led_green(0)	<= switch(0);
+		led_green(1)	<= not(gp_in(8));
 		-- automatic / manual peripherals control switch
-		led_green(2) <= switch(1);
-
+		led_green(2)	<= switch(1);
+		
+		led_red 		<= (others => '0'); -- default assignment
 		
 		-- i2c connections
-		light_enabled		<= '1'; -- for debug purpose
+		light_enabled		<= '1'; -- for debugging purpose
 		gp_ctrl(1 downto 0)	<= light_clk_ctrl & light_dat_ctrl;
 		gp_out(1 downto 0)	<= light_clk_out & light_dat_out;
 		light_clk_in		<= gp_in(1);
 		light_dat_in		<= gp_in(0);
-		moist_enabled		<= '1'; -- for debug purpose
+		moist_enabled		<= '1'; -- for debugging purpose
 		gp_ctrl(3 downto 2)	<= moist_clk_ctrl & moist_dat_ctrl;
 		gp_out(3 downto 2)	<= moist_clk_out & moist_dat_out;
 		moist_clk_in		<= gp_in(3);
 		moist_dat_in		<= gp_in(2);		
 		
 		-- setup pin mode: 1 input (safety switch), 4 outputs (relais control)
-		gp_ctrl(8 downto 4) <= "01111";
+		gp_ctrl(8 downto 4)	<= "01111";
 		-- disable all relais by default
-		gp_out(7 downto 4) <= not("0000");
+		gp_out(7 downto 4)	<= not("0000");
 		
 		warning_led_nxt		<= warning_led;
-		warning_clock_nxt	<= warning_clock;		
-		led_red 			<= (others => warning_led);		
+		warning_clock_nxt	<= warning_clock;				
 		if gp_in(8) = '1' or switch(0) = '1' then
 			warning_led_nxt		<= '0';
-			warning_clock_nxt	<= (others => '0');
-			
+			warning_clock_nxt	<= (others => '0');			
 			if switch(1) = '0' then
 				-- automatic GPIO outputs
 				-- Map: GPIO_4 -> IN1 (lighting), GPIO_5 -> IN2 (watering), GPIO_6 -> IN3 (ventilation), GPIO_7 -> IN4 (heating)
 				-- relais needs '1' for off and '0' for on, that's why `not(...)` is used
 				gp_out(7 downto 4) 	<= not(peripherals_heating_on & peripherals_ventilation_on & peripherals_watering_on & peripherals_lighting_on);
+				led_red(3 downto 0)	<= peripherals_heating_on & peripherals_ventilation_on & peripherals_watering_on & peripherals_lighting_on;
 			else
 				-- manual GPIO outputs
 				gp_out(7 downto 4)	<= not(switch(5 downto 2));
+				led_red(3 downto 0)	<= switch(5 downto 2);
 			end if;
 		else
 			-- generate blinking led row when safety switch is off
+			led_red <= (others => warning_led); -- all on or all off
 			if warning_clock = to_unsigned(WARNING_CLOCK_TICKS - 1, warning_clock'length) then
 				warning_clock_nxt	<= (others => '0');
 				if warning_led = '1' then
@@ -383,11 +382,15 @@ begin
 				else
 					warning_led_nxt <= '1';
 				end if;
-
 			else
 				warning_clock_nxt <= warning_clock + to_unsigned(1, warning_clock'length);				
 			end if;
 		end if;
+		
+		--
+		gp_ctrl(15 downto 9)	<= (others => '0');
+		gp_out(15 downto 8)		<= (others => '0');
+		led_green(8 downto 3)	<= (others => '0');
 	end process;
 	
 	-- LCD process
@@ -533,7 +536,7 @@ begin
 	end process;
 	
 	-- Seven Segment process
-	process(seg_state, seg_clock, adc_temperature)
+	process(seg_state, seg_clock, adc_temperature, moist_address)
 	begin
 		seg_state_nxt	<= seg_state;
 		seg_clock_nxt	<= seg_clock;

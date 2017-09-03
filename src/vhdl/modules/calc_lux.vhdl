@@ -56,16 +56,16 @@ begin
 			b			<= (others => '0');
 			m			<= (others => '0');
 			l			<= (others => '0');
-			ch0		<= (others => '0');
-			ch1		<= (others => '0');
+			ch0			<= (others => '0');
+			ch1			<= (others => '0');
 			temp		<= (others => '0');
 		elsif rising_edge(clock) then
 			state		<= state_nxt;
 			b			<= b_nxt;
 			m			<= m_nxt;
 			l			<= l_nxt;
-			ch0		<= ch0_nxt;
-			ch1		<= ch1_nxt;
+			ch0			<= ch0_nxt;
+			ch1			<= ch1_nxt;
 			temp		<= temp_nxt;
 		end if;
 	end process;
@@ -89,8 +89,8 @@ begin
 			when S_IDLE =>
 				if start = '1' then
 					state_nxt	<= S_RATIO;
-					ch0_nxt		<= resize(shift_right(resize(channel0, 31) * 4070, 10), ch0'length);
-					ch1_nxt		<= resize(shift_right(resize(channel1, 31) * 4070, 10), ch1'length);					
+					ch0_nxt		<= resize(shift_right(resize(channel0, 31) * 4071, 10), ch0'length);
+					ch1_nxt		<= resize(shift_right(resize(channel1, 31) * 4071, 10), ch1'length);					
 				end if;
 			when S_RATIO =>
 				x := resize(ch1 & "000000000", x'length); -- shift ch1 left by 9 bits
@@ -114,7 +114,7 @@ begin
 				elsif x <= RATIO_FACTORS(5).k * ch0 then
 					b_nxt <= to_unsigned(RATIO_FACTORS(5).b, b'length);
 					m_nxt <= to_unsigned(RATIO_FACTORS(5).m, m'length);
-				elsif x <=  RATIO_FACTORS(6).k * ch0 then
+				elsif x <= RATIO_FACTORS(6).k * ch0 then
 					b_nxt <= to_unsigned(RATIO_FACTORS(6).b, b'length);
 					m_nxt <= to_unsigned(RATIO_FACTORS(6).m, m'length);
 				else
@@ -125,7 +125,7 @@ begin
 			when S_SUBSTRACT =>
 				-- substract both channels with their coefficients
 				temp_nxt		<= signed(resize(ch0 * b, temp'length)) - signed(resize(ch1 * m, temp'length));
-				state_nxt	<= S_SHIFT;
+				state_nxt		<= S_SHIFT;
 			when S_SHIFT =>
 				-- no values below zero
 				if temp > to_signed(0, temp'length) then

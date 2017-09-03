@@ -2,6 +2,8 @@ frontend/data_*.csv
 frontend/node_modules/
 *.vhdl.bak
 *.vhd.bak
-src/quartus/*/
-
+src/quartus/db/
+src/quartus/incremental_db/
+src/quartus/simulation/
+src/quartus/PLLJ_PLLSPE_INFO.txt
 
