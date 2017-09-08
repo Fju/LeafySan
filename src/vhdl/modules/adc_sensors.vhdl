@@ -1,3 +1,11 @@
+----------------------------------------------------------------------
+-- Project		:	LeafySan
+-- Module		:	ADC Sensor Module
+-- Authors		:	Florian Winkler
+-- Lust update	:	01.09.2017
+-- Description	:	Reads voltage of analogue sensors through ADC's and converts them into unit dependent digital values
+----------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;

@@ -1,5 +1,10 @@
--- light sensor units
-
+----------------------------------------------------------------------
+-- Project		:	LeafySan
+-- Module		:	Light Sensor Module
+-- Authors		:	Florian Winkler
+-- Lust update	:	01.09.2017
+-- Description	:	Reads a digital light sensor by Grove through an I2C bus
+----------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -9,7 +14,7 @@ use work.iac_pkg.all;
 
 entity light_sensor is
 	generic (
-		CYCLE_TICKS			: natural	:= 50000000
+		CYCLE_TICKS			: natural	:= 50000000 -- 1s
 	);
 	port(
 		clock				: in  std_ulogic;
@@ -43,7 +48,7 @@ architecture rtl of light_sensor is
 	component i2c_master is
 		generic (
 			GV_SYS_CLOCK_RATE	: natural := 50000000;
-			GV_I2C_CLOCK_RATE	: natural := 400000; 	-- fast mode: 400000 Hz (400 kHz)
+			GV_I2C_CLOCK_RATE	: natural := 400000;
 			GW_SLAVE_ADDR 		: natural := 7;
 			GV_MAX_BYTES 		: natural := 16;
 			GB_USE_INOUT 		: boolean := false;		-- seperated io signals (ctrl, out, in)

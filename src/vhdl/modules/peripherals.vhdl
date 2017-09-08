@@ -1,3 +1,12 @@
+----------------------------------------------------------------------
+-- Project		:	LeafySan
+-- Module		:	Peripherals Control Module
+-- Authors		:	Florian Winkler
+-- Lust update	:	03.09.2017
+-- Description	:	Automation of peripherals, activates and deactivates heating, watering,
+--					ventilation and lighting according to the sensor values
+----------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;

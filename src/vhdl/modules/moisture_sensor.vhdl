@@ -1,4 +1,10 @@
--- light sensor units
+----------------------------------------------------------------------
+-- Project		:	LeafySan
+-- Module		:	Moisture Sensor Module
+-- Authors		:	Florian Winkler
+-- Lust update	:	01.09.2017
+-- Description	:	Reads a digital soil moisture sensor through an I2C bus
+----------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;

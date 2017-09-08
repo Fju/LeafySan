@@ -1,8 +1,11 @@
 ----------------------------------------------------------------------
--- Project		:	Invent A Chip
+-- Project		:	LeafySan
+-- Module		:	Main module
 -- Authors		:	Florian Winkler
--- Year  		:	2017
--- Description	: Project "LeafySan"	
+-- Lust update	:	03.09.2017
+-- Description	:	Connects all modules with external stuff (switches, gpio pins, LED's)
+--					Furthermore it displays all read sensor values on a LCD and a 7-Segment Display
+--					Also sends data via UART to a microcomputer
 ----------------------------------------------------------------------
 
 library ieee;

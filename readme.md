@@ -17,6 +17,11 @@ __verwendete Aktoren:__
 * [2x Heizung (12V, 12W, 77x110mm)](https://www.conrad.de/de/polyester-heizfolie-selbstklebend-12-vdc-12-vac-12-w-schutzart-ipx4-l-x-b-110-mm-x-77-mm-thermo-532878.html)
 * [2x LED-Streifen (jeweils 25cm Länge)](http://www.ledlager.de/led-streifen)
 
+## Unterstützer
+
+- [Creative Factory GmbH Großenhain](http://creative-factory-gmbh.de/)
+- Sebastian Fischer, MdL (CDU)
+
 
 ## Modell und Projektaufbau
 
@@ -27,21 +32,6 @@ Die Elektronik wurde auf einer Holzplatte mit Schrauben und Stelzen befestigt, d
 Die noch notwendige Mess- und Steuerelektronik befindet sich auf einer Lochrasterplatine unterhalb des DE2-Boards, wo sich auch eine Relaiskarte mit vier steuerbaren Relais sowie der Mikrocomputer namens Raspberry Pi befinden.
 
 Mehr Bilder gibt es in der [Bildergalerie](dokumentation/gallerie.md)
-
-
-## Frontend
-
-Das DE2-Board sendet über USB die aktuellen Sensorwerte an den Raspberry Pi 3. Der Mikrocomputer speichert aller fünf Sekunden die Sensorwerte des aktuellen Tages in einer CSV-Datei. Somit dient der Raspberry Pi als "Archiv" der Standortbedingungen der Pflanze und soll dem Nutzer darüber Aufschluss geben.
-Damit man diese Werte einsehen kann und auch Archiv-Daten graphisch in einem Diagramm darstellen kann, wurde folgende Einstellungen an dem Raspberry Pi vorgenommen: *link*
-
-An dieser Stelle großen Dank an [Phil Martins Tutorial "Using your new Raspberry Pi 3 as a WiFi Access Point"](https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/)
-
-Nachdem der Pi als Access Point eingerichtet wurde, muss der Javascript Code des Servers mithilfe von NodeJS ausgeführt werden, damit das Frontend über den Pi erreichbar ist. Wenn alles richtig eingestellt und ausgeführt wurde, ist die Seite nach Verbinden mit dem Access Point des Pi's unter `http://192.168.2.1:8000` aufrufbar.
-Das Design der Seite wurde auch für mobile Geräte, wie z. B. Tablets oder Smartphone jeglicher Bildschirmgrößen, optimiert.
-
-![Desktop Ansicht und mobile Ansicht im Vergleich](dokumentation/bilder/frontend.jpg)
-
-[Mehr zur Umsetzung und zum Ausführen der Server Applikation](dokumentation/frontend.md)
 
 
 ## Stromversorgung
@@ -61,8 +51,24 @@ Für folgende Komponenten wurden die benannten Versorgungsspannungen benötigt:
 Teilweise wurden die 3,3 V auch vom DE2-Board abgegriffen. Dieses wird wiederum vom Netzteil mit 12V betrieben.
 
 
-## Sponsoren
+## Frontend
 
-- [Creative Factory GmbH Großenhain](http://creative-factory-gmbh.de/)
-- Sebastian Fischer, MdL (CDU)
+Das DE2-Board sendet über USB die aktuellen Sensorwerte an den Raspberry Pi 3. Der Mikrocomputer speichert aller fünf Sekunden die Sensorwerte des aktuellen Tages in einer CSV-Datei. Somit dient der Raspberry Pi als "Archiv" der Standortbedingungen der Pflanze und soll dem Nutzer darüber Aufschluss geben.
+Damit man diese Werte einsehen kann und auch Archiv-Daten graphisch in einem Diagramm darstellen kann, wurde folgende Einstellungen an dem Raspberry Pi vorgenommen: *link*
+
+An dieser Stelle großen Dank an [Phil Martins Tutorial "Using your new Raspberry Pi 3 as a WiFi Access Point"](https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/)
+
+Nachdem der Pi als Access Point eingerichtet wurde, muss der Javascript Code des Servers mithilfe von NodeJS ausgeführt werden, damit das Frontend über den Pi erreichbar ist. Wenn alles richtig eingestellt und ausgeführt wurde, ist die Seite nach Verbinden mit dem Access Point des Pi's unter `http://192.168.2.1:8000` aufrufbar.
+Das Design der Seite wurde auch für mobile Geräte, wie z. B. Tablets oder Smartphone jeglicher Bildschirmgrößen, optimiert.
+
+![Desktop Ansicht und mobile Ansicht im Vergleich](dokumentation/bilder/frontend.jpg)
+
+[Mehr zur Umsetzung und zum Ausführen der Server Applikation](dokumentation/frontend.md)
+
+
+## Fazit
+
+Zusammenfassend kann man sagen, dass das Projekt in der Lage ist, eine Gewächshaus zu automatisieren und Pflanzen eine optimale Umgebung zu schaffen im Hinblick auf Wärme, Licht und Feuchte. In wie weit das Wachstum im Vergleich zu „normal“ angebauten Pflanzen aus dem Garten ist, konnte leider nicht getestet werden aufgrund der mangelnden Zeit. Außerdem ist der Stromverbrauch des Netzteiles noch zu hoch, als dass man langfristig das Projekt angeschaltet lassen könnte. Dieses Problem entsteht jedoch aufgrund des eher ungeeigneten Computer-Netzteils und kann problemlos durch effizientere Netzteile ersetzt werden.
+
+Trotz Einbindung eines CO2-Sensors, welcher sehr aufwändig und teuer ist, sind die Projektkosten relativ gering ausgefallen, was positiv anzumerken ist. Außerdem ist auch die Ressourcennutzung innerhalb des FPGA äußerst gering, weshalb man bei einer Produktion einen deutlich kleineren Chip als der auf dem DE2-Board verbaute verwenden kann.
 

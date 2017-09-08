@@ -1,3 +1,11 @@
+----------------------------------------------------------------------
+-- Project		:	LeafySan
+-- Module		:	Lux Calculation Module
+-- Authors		:	Florian Winkler
+-- Lust update	:	03.09.2017
+-- Description	:	Calculates and returns lux value according to the value of the two light channels
+----------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -84,7 +92,7 @@ begin
 		
 		-- default assignments for output signals;
 		busy 	<= '1';
-		lux	<= l;
+		lux		<= l;
 		case state is
 			when S_IDLE =>
 				if start = '1' then

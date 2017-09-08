@@ -80,7 +80,7 @@ begin
 	begin
 		if reset = '1' then
 			state <= S_START;
-			myval <= (others => '0');
+			myval <= to_unsigned(4000, myval'length);
 		elsif rising_edge(clock) then
 			myval <= myval_nxt;
 			state <= state_nxt;
@@ -99,9 +99,9 @@ begin
 		case state is			
 			when S_START =>
 				if myval = to_unsigned(7000, myval'length) then
-					myval_nxt <= to_unsigned(1000, myval'length);
+					myval_nxt <= to_unsigned(4000, myval'length);
 				else
-					myval_nxt <= myval + to_unsigned(20, myval'length);
+					myval_nxt <= myval + to_unsigned(50, myval'length);
 				end if;
 				
 				calc_lux_start <= '1';
