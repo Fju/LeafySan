@@ -8,5 +8,5 @@ src/quartus/simulation/
 src/quartus/PLLJ_PLLSPE_INFO.txt
 *.odt
 src/modelsim/iac_testbench.cr.mti
-src/modelsim/work/*
+src/modelsim/work/
 src/modelsim/transcript

@@ -142,11 +142,6 @@ architecture rtl of invent_a_chip is
 	end component moisture_sensor;
 	
 	component peripherals is
-		generic (
-			LIGHTING_THRESHOLD	: natural := 400;	-- 400lx
-			HEATING_THRESHOLD	: natural := 260;	-- 26.0°C
-			WATERING_THRESHOLD	: natural := 420	-- no unit
-		);
 		port(
 			clock				: in  std_ulogic;
 			reset				: in  std_ulogic;	
@@ -156,53 +151,63 @@ architecture rtl of invent_a_chip is
 			lighting_on			: out std_ulogic;
 			heating_on			: out std_ulogic;
 			watering_on			: out std_ulogic;
-			ventilation_on		: out std_ulogic
+			ventilation_on		: out std_ulogic;			
+			heating_thresh		: in  unsigned(11 downto 0);
+			lighting_thresh		: in  unsigned(15 downto 0);
+			watering_thresh		: in  unsigned(15 downto 0)
 		);
 	end component peripherals;
 	
-	constant SENSOR_CYCLE_TICKS	: natural := 50000000; -- 1s
-	
+
+	constant SENSOR_CYCLE_TICKS	: natural := 50000000; -- 1s	
 	constant LCD_CLOCK_TICKS		: natural := 10000000;	-- 200ms
 	constant SEG_CLOCK_TICKS		: natural := 12500000;	-- 250ms
-	constant UART_CLOCK_TICKS		: natural := 50000000;	-- 1s
-	constant UART_BYTE_COUNT		: natural := 16;		-- 4x4 bytes
+	constant UART_WR_BYTE_COUNT	: natural := 13;
+	constant UART_RD_BYTE_COUNT	: natural := 9;
+	constant UART_DATA_WIDTH	: natural := 6;
 	constant WARNING_CLOCK_TICKS	: natural := 37500000;	-- 750ms
 
 
 	-- state definitions
 	type lcd_state_t is (S_LCD_WAIT, S_LCD_DISPLAY);
 	type seg_state_t is (S_SEG_WAIT, S_SEG_DISPLAY_DEC, S_SEG_DISPLAY_HEX);
-	type uart_state_t is (S_UART_WAIT, S_UART_SEND_LOOP);
+	type uart_state_t is (S_UART_RD_WAIT_START, S_UART_RD_READ_LOOP, S_UART_WR_START, S_UART_WR_WRITE_LOOP, S_UART_WR_END);
 	type sensor_state_t is (S_SENS_LIGHT, S_SENS_MOIST);
 	-- state registers
 	signal lcd_state, lcd_state_nxt			: lcd_state_t;
 	signal seg_state, seg_state_nxt			: seg_state_t;
-	signal uart_state, uart_state_nxt		: uart_state_t;
+	signal uart_state, uart_state_nxt	: uart_state_t;
 	signal sensor_state, sensor_state_nxt	: sensor_state_t;
+
 	
 	-- seven-segment registers
 	signal seg_clock, seg_clock_nxt	: unsigned(to_log2(SEG_CLOCK_TICKS) - 1 downto 0);
+
 	
 	-- LCD registers
 	signal lcd_clock, lcd_clock_nxt	: unsigned(to_log2(LCD_CLOCK_TICKS) - 1 downto 0);	
 	signal lcd_cmds, lcd_cmds_nxt 	: lcd_commands_t(0 to 32);
 	-- amount of bytes sent to determine whether all data has been sent already
 	signal lcd_sent_chars, lcd_sent_chars_nxt : unsigned(to_log2(lcd_cmds'length) - 1 downto 0);
+
 	
 	-- UART registers
-	signal uart_clock, uart_clock_nxt			: unsigned(to_log2(UART_CLOCK_TICKS) - 1 downto 0);
-	signal uart_sent_bytes, uart_sent_bytes_nxt	: unsigned(to_log2(UART_BYTE_COUNT + 1) - 1 downto 0);	
-	type uart_protocol_record_t is record
-		id			: std_ulogic_vector(1 downto 0);	-- indicates sensor (1 = light, 2 = moisture)
-		shift		: std_ulogic_vector(1 downto 0);	-- indicates 4-bit shift, 0 = (3 downto 0), 1 = (7 downto 4), etc.
-		data		: std_ulogic_vector(3 downto 0);	-- 4-bit data
+	signal uart_sent_bytes, uart_sent_bytes_nxt		: unsigned(to_log2(UART_WR_BYTE_COUNT) - 1 downto 0);
+	signal uart_received_bytes, uart_received_bytes_nxt	: unsigned(to_log2(UART_RD_BYTE_COUNT) - 1 downto 0);
+	type uart_protocol_entry_t is record
+		cmd	: std_ulogic_vector(1 downto 0);
+		data	: std_ulogic_vector(5 downto 0);
 	end record;
-	type uart_protocol_array is array (natural range <>) of uart_protocol_record_t;
-	signal uart_protocol, uart_protocol_nxt	: uart_protocol_array(0 to UART_BYTE_COUNT - 1);
-	
+	type uart_protocol_array is array (natural range <>) of uart_protocol_entry_t;
+	signal uart_wr_array, uart_wr_array_nxt			: uart_protocol_array(0 to UART_WR_BYTE_COUNT - 1);
+	signal uart_rd_array, uart_rd_array_nxt			: uart_protocol_array(0 to UART_RD_BYTE_COUNT - 1);
+
+
+
 	-- signals for `adc_sensors` component
 	signal adc_temperature		: unsigned(11 downto 0);
 	signal adc_carbondioxide	: unsigned(13 downto 0);
+
 
 	-- signals for `light_sensor` component
 	signal light_clk_ctrl, light_dat_ctrl	: std_ulogic;
@@ -210,6 +215,7 @@ architecture rtl of invent_a_chip is
 	signal light_clk_out, light_dat_out		: std_ulogic;
 	signal light_enabled					: std_ulogic;
 	signal light_value						: unsigned(15 downto 0);
+
 	
 	-- signals for `moisture_sensor` component
 	signal moist_clk_ctrl, moist_dat_ctrl	: std_ulogic;
@@ -225,6 +231,10 @@ architecture rtl of invent_a_chip is
 	signal peripherals_watering_on			: std_ulogic;
 	signal peripherals_lighting_on			: std_ulogic;
 	signal peripherals_ventilation_on		: std_ulogic;
+
+	signal heating_thresh, heating_thresh_nxt		: unsigned(11 downto 0);
+	signal lighting_thresh, lighting_thresh_nxt	: unsigned(15 downto 0);
+	signal watering_thresh, watering_thresh_nxt	: unsigned(15 downto 0);
 	
 	-- registers to create blinking led effect
 	signal warning_clock, warning_clock_nxt	: unsigned(to_log2(WARNING_CLOCK_TICKS) - 1 downto 0);
@@ -277,12 +287,7 @@ begin
 			address			=> moist_address,
 			enabled			=> moist_enabled
 		);
-	peripherals_inst : peripherals
-		generic map (
-			LIGHTING_THRESHOLD	=> 400, -- 400lx
-			HEATING_THRESHOLD	=> 260,	-- 26.0°C
-			WATERING_THRESHOLD	=> 420	-- no unit
-		)
+	peripherals_inst : peripherals		
 		port map (
 			clock			=> clock,
 			reset			=> reset,
@@ -292,7 +297,10 @@ begin
 			lighting_on		=> peripherals_lighting_on,
 			heating_on		=> peripherals_heating_on,
 			watering_on		=> peripherals_watering_on,
-			ventilation_on	=> peripherals_ventilation_on
+			ventilation_on	=> peripherals_ventilation_on,
+			heating_thresh	=> heating_thresh,
+			lighting_thresh	=> lighting_thresh,
+			watering_thresh	=> watering_thresh
 		);
 
 
@@ -306,12 +314,17 @@ begin
 			lcd_sent_chars		<= (others => '0');
 			seg_state			<= S_SEG_WAIT;
 			seg_clock			<= (others => '0');
-			uart_state			<= S_UART_WAIT;
-			uart_clock			<= (others => '0');
+			uart_state		<= S_UART_RD_WAIT_START;
+			uart_wr_array		<= (others => (others => (others => '0')));
+			uart_rd_array		<= (others => (others => (others => '0')));
 			uart_sent_bytes		<= (others => '0');
-			uart_protocol		<= (others => (others => (others =>'0')));
+			uart_received_bytes	<= (others => '0');
 			warning_clock		<= (others => '0');
 			warning_led			<= '0';
+			-- set thresholds to default value
+			heating_thresh		<= to_unsigned(240, heating_thresh'length);  -- 24,0 �C
+			lighting_thresh		<= to_unsigned(400, lighting_thresh'length); -- 400 lx
+			watering_thresh		<= to_unsigned(500, watering_thresh'length); -- 50,0 %
 		elsif rising_edge(clock) then
 			lcd_state			<= lcd_state_nxt;
 			lcd_clock			<= lcd_clock_nxt;
@@ -319,12 +332,16 @@ begin
 			lcd_sent_chars		<= lcd_sent_chars_nxt;
 			seg_state			<= seg_state_nxt;
 			seg_clock			<= seg_clock_nxt;
-			uart_state			<= uart_state_nxt;
-			uart_clock			<= uart_clock_nxt;
+			uart_state		<= uart_state_nxt;
+			uart_wr_array		<= uart_wr_array_nxt;
+			uart_rd_array		<= uart_rd_array_nxt;
 			uart_sent_bytes		<= uart_sent_bytes_nxt;
-			uart_protocol		<= uart_protocol_nxt;
+			uart_received_bytes	<= uart_received_bytes_nxt;
 			warning_clock		<= warning_clock_nxt;
 			warning_led			<= warning_led_nxt;
+			heating_thresh		<= heating_thresh_nxt;
+			lighting_thresh		<= lighting_thresh_nxt;
+			watering_thresh		<= watering_thresh_nxt;
 		end if;
 	end process;
 
@@ -397,7 +414,7 @@ begin
 	end process;
 	
 	-- LCD process
-	process(key, adc_dac_din, lcd_state, lcd_clock, lcd_irq_rdy, lcd_cmds, lcd_sent_chars,	moist_moisture, moist_temperature, light_value, adc_carbondioxide)
+	process(key, adc_dac_din, lcd_state, lcd_clock, lcd_irq_rdy, lcd_cmds, lcd_sent_chars, moist_moisture, moist_temperature, light_value, adc_carbondioxide)
 		-- variables for converting numbers into lcd_cmds
 		variable mst_bcd_value	: unsigned(15 downto 0) := (others => '0');
 		variable tmp_bcd_value	: unsigned(15 downto 0) := (others => '0');
@@ -468,72 +485,142 @@ begin
 	end process;
 	
 	-- UART process
-	process(light_value, moist_moisture, moist_temperature, adc_carbondioxide, uart_clock, uart_state, uart_sent_bytes, uart_irq_tx, uart_protocol)	
-		constant VALUE_COUNT		: natural := 4; -- amount of 16-bit values (temp, moisture, brightness, carbondioxide)
-		variable i, j				: natural := 0; -- loop variables
-		variable current_value	: unsigned(15 downto 0);
-		variable item				: uart_protocol_record_t;
-	begin	
-		-- default assignments for UART interface
-		uart_cs		  	<= '0';
-		uart_wr		  	<= '0';
-		uart_addr	  	<= (others => '0');
-		uart_dout	  	<= (others => '0');
+	process(uart_state, uart_wr_array, uart_rd_array, uart_sent_bytes, uart_received_bytes, uart_irq_tx, uart_irq_rx, uart_din,
+		peripherals_ventilation_on, peripherals_heating_on, peripherals_lighting_on, peripherals_watering_on,  moist_moisture, moist_temperature, light_value, adc_carbondioxide)
+		constant VALUE_COUNT		: natural := 5; -- amount of data segments (four segments for each sensor + one segment including all states (on/off) of peripherals)
+		constant SEGMENT_COUNT		: natural := 3; -- 3 bytes per "segment"
+		variable i, j			: natural := 0; -- loop variables
+		variable segment_cmd		: std_ulogic_vector(1 downto 0);
+		variable segment_data		: std_ulogic_vector(SEGMENT_COUNT * UART_DATA_WIDTH - 1 downto 0);
+		variable item			: uart_protocol_entry_t;	
+		variable segment_value		: std_ulogic_vector(15 downto 0);	
+	begin
+		uart_cs		<= '0';
+		uart_wr		<= '0';
+		uart_addr	<= (others => '0');
+		uart_dout	<= (others => '0');
 		uart_ack_rx  	<= '0';
 		uart_ack_tx  	<= '0';
 		
 		-- hold values		
-		uart_state_nxt			<= uart_state;
+		uart_state_nxt		<= uart_state;
 		uart_sent_bytes_nxt	<= uart_sent_bytes;
-		
-		-- assign sensor values to protocol
-		for i in 0 to VALUE_COUNT - 1 loop
-			if i = 0 then
-				current_value	:= light_value;
-			elsif i = 1 then
-				current_value	:= moist_moisture;
-			elsif i = 2 then
-				current_value	:= resize(moist_temperature, current_value'length);
-			else
-				current_value	:= resize(adc_carbondioxide, current_value'length);
-			end if;
-			for j in 0 to 3 loop
-				uart_protocol_nxt(j + i * 4) <= (
-						std_ulogic_vector(to_unsigned(i, 2)), -- id
-						std_ulogic_vector(to_unsigned(j, 2)), -- shift
-						std_ulogic_vector(resize(shift_right(current_value, j * 4), 4)) -- data
-					);
-			end loop;
-		end loop; 
-		
-		-- increment clock independent of state to guarantee stable 1s cycle
-		uart_clock_nxt		<= uart_clock + to_unsigned(1, uart_clock'length);
+		uart_received_bytes_nxt	<= uart_received_bytes;
+		uart_rd_array_nxt	<= uart_rd_array;		
+		lighting_thresh_nxt	<= lighting_thresh;
+		watering_thresh_nxt	<= watering_thresh;
+		heating_thresh_nxt	<= heating_thresh;
+
 		case uart_state is
-			when S_UART_WAIT =>
-				if uart_clock >= to_unsigned(UART_CLOCK_TICKS - 1, uart_clock'length) then
-					-- switch to `send` state
-					uart_state_nxt	<= S_UART_SEND_LOOP;
-					uart_clock_nxt	<= (others => '0');
+			when S_UART_RD_WAIT_START =>
+				if uart_irq_rx = '1' then 
+					uart_cs <= '1';
+					uart_addr <= CV_ADDR_UART_DATA_RX;
+					uart_wr	<= '0';
+					-- save data
+					if uart_din(7 downto 0) = "01000000" then
+						uart_received_bytes_nxt <= to_unsigned(0, uart_received_bytes'length);
+						uart_rd_array_nxt	<= (others => (others => (others => '0')));
+						uart_state_nxt		<= S_UART_RD_READ_LOOP;
+					end if;
 				end if;
-			when S_UART_SEND_LOOP =>
+			when S_UART_RD_READ_LOOP =>
+				if uart_irq_rx = '1' then 
+					uart_cs <= '1';
+					uart_addr <= CV_ADDR_UART_DATA_RX;
+					uart_wr	<= '0';
+					
+					-- increment counter	
+					uart_received_bytes_nxt	<= uart_received_bytes + to_unsigned(1, uart_received_bytes'length);
+					if uart_din(7 downto 0) = "00111111" then
+						-- received end command
+						if uart_received_bytes = to_unsigned(UART_RD_BYTE_COUNT, uart_received_bytes'length) then
+							for i in 0 to 2 loop
+								if uart_rd_array(i*3).cmd = "10" or uart_rd_array(i*3).cmd = "11" then
+									segment_value := uart_rd_array(i*3).data & uart_rd_array(i*3+1).data & uart_rd_array(i*3+2).data(5 downto 2);
+									if uart_rd_array(i*3+2).data(1 downto 0) = "00" then
+										lighting_thresh_nxt	<= unsigned(segment_value);
+									elsif uart_rd_array(i*3+2).data(1 downto 0) = "01" then
+										watering_thresh_nxt	<= unsigned(segment_value);
+									elsif uart_rd_array(i*3+2).data(1 downto 0) = "10" then
+										heating_thresh_nxt	<= resize(unsigned(segment_value), heating_thresh'length);
+									end if;
+								end if;
+							end loop;
+						end if;
+						uart_state_nxt	<= S_UART_WR_START;
+					else						
+						uart_rd_array_nxt(to_integer(uart_received_bytes)) <= (
+							uart_din(7 downto 6),	-- cmd
+							uart_din(5 downto 0)	-- data
+						); 
+					end if;
+				end if;
+			when S_UART_WR_START =>
+				if uart_irq_tx = '1' then					
+					uart_cs		<= '1';
+					uart_addr	<= CV_ADDR_UART_DATA_TX;
+					uart_wr		<= '1';
+					-- write `start` cmd
+					uart_dout(7 downto 0)	<= "01000000";
+					
+					-- assign sensor values to protocol
+					for i in 0 to VALUE_COUNT - 1 loop
+						if i = 0 then
+							segment_cmd	:= "10";
+							segment_data	:= std_ulogic_vector(resize(light_value, segment_data'length - 2)) & "00";
+						elsif i = 1 then
+							segment_cmd	:= "11";
+							segment_data	:= std_ulogic_vector(moist_moisture) & "01";
+						elsif i = 2 then
+							segment_cmd	:= "10";
+							segment_data	:= std_ulogic_vector(moist_temperature) & "10";
+						elsif i = 3 then
+							segment_cmd	:= "11";
+							segment_data	:= std_ulogic_vector(resize(adc_carbondioxide, segment_data'length - 2)) & "11";
+						else
+							segment_cmd	:= "10";
+							segment_data	:= std_ulogic_vector(resize(unsigned'(peripherals_lighting_on & peripherals_watering_on & peripherals_heating_on & peripherals_ventilation_on & "00"), segment_data'length));
+						end if;
+						for j in 0 to SEGMENT_COUNT - 1 loop
+							if i < 4 or j = 0 then
+								uart_wr_array_nxt(j + i * SEGMENT_COUNT) <= (
+									segment_cmd, -- cmd
+									std_ulogic_vector(resize(shift_right(unsigned(segment_data), (2 - j) * UART_DATA_WIDTH), UART_DATA_WIDTH)) -- data
+								);
+							end if;
+						end loop;
+					end loop;
+
+					uart_state_nxt <= S_UART_WR_WRITE_LOOP;
+				end if;
+			when S_UART_WR_WRITE_LOOP =>
 				if uart_irq_tx = '1' then
-					-- start transmission
 					uart_cs		<= '1';
 					uart_addr	<= CV_ADDR_UART_DATA_TX;
 					uart_wr		<= '1';
 					
-					-- combine id, shift, data of current item to one byte
-					item := uart_protocol(to_integer(uart_sent_bytes));					
-					uart_dout(7 downto 0)	<= item.id & item.shift & item.data;					
+					item := uart_wr_array(to_integer(uart_sent_bytes));
+					uart_dout(7 downto 0)	<= item.cmd & item.data;									
 					
-					if uart_sent_bytes = to_unsigned(UART_BYTE_COUNT - 1, uart_sent_bytes'length) then
+					if uart_sent_bytes = to_unsigned(UART_WR_BYTE_COUNT - 1, uart_sent_bytes'length) then
 						-- last byte sent
 						uart_sent_bytes_nxt	<= (others => '0'); -- reset counter
-						uart_state_nxt		<= S_UART_WAIT;						
+						uart_state_nxt		<= S_UART_WR_END;						
 					else
 						-- increment counter
 						uart_sent_bytes_nxt	<= uart_sent_bytes + to_unsigned(1, uart_sent_bytes'length);
 					end if;
+				end if;
+			when S_UART_WR_END =>
+				if uart_irq_tx = '1' then
+					uart_cs		<= '1';
+					uart_addr	<= CV_ADDR_UART_DATA_TX;
+					uart_wr		<= '1';
+					-- write `end` cmd
+					uart_dout(7 downto 0)	<= "00111111";
+					
+					uart_state_nxt <= S_UART_RD_WAIT_START;
 				end if;
 		end case;
 	end process;
