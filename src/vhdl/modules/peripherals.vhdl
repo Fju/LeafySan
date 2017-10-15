@@ -2,9 +2,9 @@
 -- Project		:	LeafySan
 -- Module		:	Peripherals Control Module
 -- Authors		:	Florian Winkler
--- Lust update	:	03.09.2017
+-- Last update	:	03.09.2017
 -- Description	:	Automation of peripherals, activates and deactivates heating, watering,
---					ventilation and lighting according to the sensor values
+--						ventilation and lighting according to the sensor values
 ----------------------------------------------------------------------
 
 library ieee;
@@ -15,22 +15,21 @@ library work;
 use work.iac_pkg.all;
 
 entity peripherals is
-	generic (
-		LIGHTING_THRESHOLD	: natural := 400;	-- 400lx
-		HEATING_THRESHOLD	: natural := 260;	-- 26.0°C
-		WATERING_THRESHOLD	: natural := 420	-- no unit
-	);
 	port(
-		clock			: in  std_ulogic;
-		reset			: in  std_ulogic;
-		temperature		: in  unsigned(11 downto 0);
-		brightness		: in  unsigned(15 downto 0);
-		moisture		: in  unsigned(15 downto 0);
+		clock					: in  std_ulogic;
+		reset					: in  std_ulogic;
+		temperature			: in  unsigned(11 downto 0);
+		brightness			: in  unsigned(15 downto 0);
+		moisture				: in  unsigned(15 downto 0);
 		
-		lighting_on		: out std_ulogic;
-		heating_on		: out std_ulogic;
-		watering_on		: out std_ulogic;
-		ventilation_on	: out std_ulogic
+		lighting_on			: out std_ulogic;
+		heating_on			: out std_ulogic;
+		watering_on			: out std_ulogic;
+		ventilation_on		: out std_ulogic;
+		
+		heating_thresh		: in  unsigned(11 downto 0);
+		lighting_thresh	: in  unsigned(15 downto 0);
+		watering_thresh	: in  unsigned(15 downto 0)
 	);
 end peripherals;
 
@@ -119,7 +118,7 @@ begin
 		end case;
 	end process;
 	
-	process(temperature, timer_pulse, heating_state, heating_clock)
+	process(temperature, timer_pulse, heating_state, heating_clock, heating_thresh)
 	begin
 		-- hold previous values
 		heating_state_nxt		<= heating_state;
@@ -129,13 +128,13 @@ begin
 		case heating_state is
 			when S_HEATING_OFF =>
 				-- power on heating only if temperature is 1 degree celsius below the desired value
-				if temperature < to_unsigned(HEATING_THRESHOLD - 10, temperature'length) then
+				if temperature < heating_thresh - to_unsigned(10, temperature'length) then
 					heating_state_nxt <= S_HEATING_ON;
 				end if;
 			when S_HEATING_ON =>
 				heating_on	<= '1';
 				-- power off heating if temperature is 1 degree above the desired value
-				if temperature >= to_unsigned(HEATING_THRESHOLD + 10, temperature'length) then
+				if temperature >= heating_thresh + to_unsigned(10, temperature'length) then
 					heating_state_nxt	<= S_HEATING_DELAY;
 					heating_clock_nxt	<= (others => '0');
 				end if;
@@ -149,7 +148,7 @@ begin
 					end if;
 				end if;
 			when S_HEATING_DELAY =>				
-				if timer_pulse = '1' then								
+				if timer_pulse = '1' then	
 					if heating_clock = to_unsigned(HEATING_DELAY_CLOCK_COUNT - 1, heating_clock'length) then
 					-- end delay
 						heating_state_nxt <= S_HEATING_OFF;
@@ -161,7 +160,7 @@ begin
 		end case;
 	end process;
 	
-	process(timer_pulse, lighting_clock, lighting_current, lighting_next, brightness)
+	process(timer_pulse, lighting_clock, lighting_current, lighting_next, brightness, lighting_thresh)
 	begin
 		-- hold previous values
 		lighting_clock_nxt		<= lighting_clock;
@@ -181,14 +180,14 @@ begin
 				lighting_clock_nxt	<= lighting_clock + to_unsigned(1, lighting_clock'length);				
 				if lighting_current = '0' then
 					-- lighting is turned off currently
-					if brightness >= to_unsigned(LIGHTING_THRESHOLD, temperature'length) then
+					if brightness >= lighting_thresh then
 						-- next lighting state will be `off` again, because not all values were below threshold (too bright)
 						lighting_next_nxt <= '0';					
 					end if;
 					-- otherwise the next lighting state will be `on`, see `not(lighting_current)` line 158
 				else
 					-- lighting is turned on currently
-					if brightness <= to_unsigned(LIGHTING_THRESHOLD, temperature'length) then
+					if brightness <= lighting_thresh then
 						-- next lighting state will be `on` again, because not all values were above threshold (too dark)
 						lighting_next_nxt	<= '1';
 					end if;
@@ -198,7 +197,7 @@ begin
 		end if;
 	end process;
 	
-	process(timer_pulse, watering_state, watering_clock, moisture)
+	process(timer_pulse, watering_state, watering_clock, moisture, watering_thresh)
 	begin
 		-- hold previous values
 		watering_state_nxt		<= watering_state;
@@ -209,13 +208,13 @@ begin
 		case watering_state is
 			when S_WATERING_OFF =>
 				-- power on watering only if moisture value is 10 steps below threshold
-				if moisture < to_unsigned(WATERING_THRESHOLD - 10, moisture'length) then
+				if moisture < watering_thresh - to_unsigned(10, moisture'length) then
 					watering_state_nxt <= S_WATERING_ON;
 				end if;
 			when S_WATERING_ON =>
 				watering_on	<= '1';
 				-- power off watering if moisture is above threshold
-				if moisture >= to_unsigned(WATERING_THRESHOLD, moisture'length) then
+				if moisture >= watering_thresh then
 					watering_state_nxt	<= S_WATERING_DELAY;
 					watering_clock_nxt	<= (others => '0');
 				end if;

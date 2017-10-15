@@ -322,7 +322,7 @@ begin
 			warning_clock		<= (others => '0');
 			warning_led			<= '0';
 			-- set thresholds to default value
-			heating_thresh		<= to_unsigned(240, heating_thresh'length);  -- 24,0 °C
+			heating_thresh		<= to_unsigned(240, heating_thresh'length);  -- 24,0 ï¿½C
 			lighting_thresh		<= to_unsigned(400, lighting_thresh'length); -- 400 lx
 			watering_thresh		<= to_unsigned(500, watering_thresh'length); -- 50,0 %
 		elsif rising_edge(clock) then
@@ -486,30 +486,32 @@ begin
 	
 	-- UART process
 	process(uart_state, uart_wr_array, uart_rd_array, uart_sent_bytes, uart_received_bytes, uart_irq_tx, uart_irq_rx, uart_din,
-		peripherals_ventilation_on, peripherals_heating_on, peripherals_lighting_on, peripherals_watering_on,  moist_moisture, moist_temperature, light_value, adc_carbondioxide)
+		peripherals_ventilation_on, peripherals_heating_on, peripherals_lighting_on, peripherals_watering_on,  moist_moisture, moist_temperature, light_value, adc_carbondioxide,
+		heating_thresh, lighting_thresh, watering_thresh)
 		constant VALUE_COUNT		: natural := 5; -- amount of data segments (four segments for each sensor + one segment including all states (on/off) of peripherals)
-		constant SEGMENT_COUNT		: natural := 3; -- 3 bytes per "segment"
-		variable i, j			: natural := 0; -- loop variables
+		constant SEGMENT_COUNT	: natural := 3; -- 3 bytes per "segment"
+		variable i, j				: natural := 0; -- loop variables
 		variable segment_cmd		: std_ulogic_vector(1 downto 0);
-		variable segment_data		: std_ulogic_vector(SEGMENT_COUNT * UART_DATA_WIDTH - 1 downto 0);
-		variable item			: uart_protocol_entry_t;	
-		variable segment_value		: std_ulogic_vector(15 downto 0);	
+		variable segment_data	: std_ulogic_vector(SEGMENT_COUNT * UART_DATA_WIDTH - 1 downto 0);
+		variable item				: uart_protocol_entry_t;	
+		variable segment_value	: std_ulogic_vector(15 downto 0);	
 	begin
-		uart_cs		<= '0';
-		uart_wr		<= '0';
-		uart_addr	<= (others => '0');
-		uart_dout	<= (others => '0');
+		uart_cs			<= '0';
+		uart_wr			<= '0';
+		uart_addr		<= (others => '0');
+		uart_dout		<= (others => '0');
 		uart_ack_rx  	<= '0';
 		uart_ack_tx  	<= '0';
 		
 		-- hold values		
-		uart_state_nxt		<= uart_state;
-		uart_sent_bytes_nxt	<= uart_sent_bytes;
+		uart_state_nxt				<= uart_state;
+		uart_sent_bytes_nxt		<= uart_sent_bytes;
 		uart_received_bytes_nxt	<= uart_received_bytes;
-		uart_rd_array_nxt	<= uart_rd_array;		
-		lighting_thresh_nxt	<= lighting_thresh;
-		watering_thresh_nxt	<= watering_thresh;
-		heating_thresh_nxt	<= heating_thresh;
+		uart_rd_array_nxt			<= uart_rd_array;
+		uart_wr_array_nxt			<= uart_wr_array;
+		lighting_thresh_nxt		<= lighting_thresh;
+		watering_thresh_nxt		<= watering_thresh;
+		heating_thresh_nxt		<= heating_thresh;
 
 		case uart_state is
 			when S_UART_RD_WAIT_START =>
@@ -552,7 +554,7 @@ begin
 					else						
 						uart_rd_array_nxt(to_integer(uart_received_bytes)) <= (
 							uart_din(7 downto 6),	-- cmd
-							uart_din(5 downto 0)	-- data
+							uart_din(5 downto 0)		-- data
 						); 
 					end if;
 				end if;
@@ -606,7 +608,7 @@ begin
 					if uart_sent_bytes = to_unsigned(UART_WR_BYTE_COUNT - 1, uart_sent_bytes'length) then
 						-- last byte sent
 						uart_sent_bytes_nxt	<= (others => '0'); -- reset counter
-						uart_state_nxt		<= S_UART_WR_END;						
+						uart_state_nxt			<= S_UART_WR_END;						
 					else
 						-- increment counter
 						uart_sent_bytes_nxt	<= uart_sent_bytes + to_unsigned(1, uart_sent_bytes'length);
