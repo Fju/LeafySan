@@ -159,12 +159,12 @@ architecture rtl of invent_a_chip is
 	end component peripherals;
 	
 
-	constant SENSOR_CYCLE_TICKS	: natural := 50000000; -- 1s	
+	constant SENSOR_CYCLE_TICKS		: natural := 50000000; -- 1s	
 	constant LCD_CLOCK_TICKS		: natural := 10000000;	-- 200ms
 	constant SEG_CLOCK_TICKS		: natural := 12500000;	-- 250ms
-	constant UART_WR_BYTE_COUNT	: natural := 13;
-	constant UART_RD_BYTE_COUNT	: natural := 9;
-	constant UART_DATA_WIDTH	: natural := 6;
+	constant UART_WR_BYTE_COUNT		: natural := 13;
+	constant UART_RD_BYTE_COUNT		: natural := 9;
+	constant UART_DATA_WIDTH		: natural := 6;
 	constant WARNING_CLOCK_TICKS	: natural := 37500000;	-- 750ms
 
 
@@ -176,7 +176,7 @@ architecture rtl of invent_a_chip is
 	-- state registers
 	signal lcd_state, lcd_state_nxt			: lcd_state_t;
 	signal seg_state, seg_state_nxt			: seg_state_t;
-	signal uart_state, uart_state_nxt	: uart_state_t;
+	signal uart_state, uart_state_nxt		: uart_state_t;
 	signal sensor_state, sensor_state_nxt	: sensor_state_t;
 
 	
@@ -192,7 +192,7 @@ architecture rtl of invent_a_chip is
 
 	
 	-- UART registers
-	signal uart_sent_bytes, uart_sent_bytes_nxt		: unsigned(to_log2(UART_WR_BYTE_COUNT) - 1 downto 0);
+	signal uart_sent_bytes, uart_sent_bytes_nxt			: unsigned(to_log2(UART_WR_BYTE_COUNT) - 1 downto 0);
 	signal uart_received_bytes, uart_received_bytes_nxt	: unsigned(to_log2(UART_RD_BYTE_COUNT) - 1 downto 0);
 	type uart_protocol_entry_t is record
 		cmd	: std_ulogic_vector(1 downto 0);
@@ -233,8 +233,8 @@ architecture rtl of invent_a_chip is
 	signal peripherals_ventilation_on		: std_ulogic;
 
 	signal heating_thresh, heating_thresh_nxt		: unsigned(11 downto 0);
-	signal lighting_thresh, lighting_thresh_nxt	: unsigned(15 downto 0);
-	signal watering_thresh, watering_thresh_nxt	: unsigned(15 downto 0);
+	signal lighting_thresh, lighting_thresh_nxt		: unsigned(15 downto 0);
+	signal watering_thresh, watering_thresh_nxt		: unsigned(15 downto 0);
 	
 	-- registers to create blinking led effect
 	signal warning_clock, warning_clock_nxt	: unsigned(to_log2(WARNING_CLOCK_TICKS) - 1 downto 0);
@@ -314,7 +314,7 @@ begin
 			lcd_sent_chars		<= (others => '0');
 			seg_state			<= S_SEG_WAIT;
 			seg_clock			<= (others => '0');
-			uart_state		<= S_UART_RD_WAIT_START;
+			uart_state			<= S_UART_RD_WAIT_START;
 			uart_wr_array		<= (others => (others => (others => '0')));
 			uart_rd_array		<= (others => (others => (others => '0')));
 			uart_sent_bytes		<= (others => '0');
@@ -322,7 +322,7 @@ begin
 			warning_clock		<= (others => '0');
 			warning_led			<= '0';
 			-- set thresholds to default value
-			heating_thresh		<= to_unsigned(240, heating_thresh'length);  -- 24,0 �C
+			heating_thresh		<= to_unsigned(220, heating_thresh'length);  -- 22,0 °C
 			lighting_thresh		<= to_unsigned(400, lighting_thresh'length); -- 400 lx
 			watering_thresh		<= to_unsigned(500, watering_thresh'length); -- 50,0 %
 		elsif rising_edge(clock) then
@@ -332,7 +332,7 @@ begin
 			lcd_sent_chars		<= lcd_sent_chars_nxt;
 			seg_state			<= seg_state_nxt;
 			seg_clock			<= seg_clock_nxt;
-			uart_state		<= uart_state_nxt;
+			uart_state			<= uart_state_nxt;
 			uart_wr_array		<= uart_wr_array_nxt;
 			uart_rd_array		<= uart_rd_array_nxt;
 			uart_sent_bytes		<= uart_sent_bytes_nxt;
@@ -414,16 +414,23 @@ begin
 	end process;
 	
 	-- LCD process
-	process(key, adc_dac_din, lcd_state, lcd_clock, lcd_irq_rdy, lcd_cmds, lcd_sent_chars, moist_moisture, moist_temperature, light_value, adc_carbondioxide)
+	process(key, adc_dac_din, lcd_state, lcd_clock, lcd_irq_rdy, lcd_cmds, lcd_sent_chars, moist_moisture, moist_temperature, light_value, adc_carbondioxide,
+			lighting_thresh, watering_thresh, heating_thresh)
 		-- variables for converting numbers into lcd_cmds
 		variable mst_bcd_value	: unsigned(15 downto 0) := (others => '0');
 		variable tmp_bcd_value	: unsigned(15 downto 0) := (others => '0');
 		variable lux_bcd_value	: unsigned(19 downto 0) := (others => '0');
 		variable co2_bcd_value	: unsigned(15 downto 0) := (others => '0');
+		variable mst_bcd_thresh	: unsigned(11 downto 0) := (others => '0');
+		variable tmp_bcd_thresh	: unsigned(11 downto 0) := (others => '0');
+		variable lux_bcd_thresh	: unsigned(19 downto 0) := (others => '0');
 		variable lcd_cmds_mst	: std_ulogic_vector(55 downto 0) := (others => '0');
 		variable lcd_cmds_tmp	: std_ulogic_vector(55 downto 0) := (others => '0');
 		variable lcd_cmds_lux	: std_ulogic_vector(63 downto 0) := (others => '0');
-		variable lcd_cmds_co2	: std_ulogic_vector(55 downto 0) := (others => '0');		
+		variable lcd_cmds_co2	: std_ulogic_vector(55 downto 0) := (others => '0');
+		variable lcd_thresh_mst	: std_ulogic_vector(31 downto 0) := (others => '0');
+		variable lcd_thresh_tmp	: std_ulogic_vector(31 downto 0) := (others => '0');
+		variable lcd_thresh_lux	: std_ulogic_vector(39 downto 0) := (others => '0');
 	begin	
 		-- hold values of all registers by default
 		lcd_state_nxt		<= lcd_state;
@@ -452,13 +459,24 @@ begin
 					tmp_bcd_value	:= unsigned(to_bcd(std_ulogic_vector(moist_temperature), 4));
 					lux_bcd_value	:= unsigned(to_bcd(std_ulogic_vector(light_value), 5));
 					co2_bcd_value	:= unsigned(to_bcd(std_ulogic_vector(adc_carbondioxide), 4));
+					mst_bcd_thresh	:= unsigned(to_bcd(std_ulogic_vector(watering_thresh), 3));
+					tmp_bcd_thresh	:= unsigned(to_bcd(std_ulogic_vector(heating_thresh), 3));
+					lux_bcd_thresh	:= unsigned(to_bcd(std_ulogic_vector(lighting_thresh), 5));
+					
 					-- ascii storages
 					lcd_cmds_mst	:= asciitext("M: ") & ascii(mst_bcd_value(15 downto 12)) & ascii(mst_bcd_value(11 downto 8)) & ascii(mst_bcd_value(7 downto 4)) & ascii(mst_bcd_value(3 downto 0));
 					lcd_cmds_tmp	:= asciitext("T: ") & ascii(tmp_bcd_value(15 downto 12)) & ascii(tmp_bcd_value(11 downto 8)) & ascii(tmp_bcd_value(7 downto 4)) & ascii(tmp_bcd_value(3 downto 0));
 					lcd_cmds_lux	:= asciitext("L: ") & ascii(lux_bcd_value(19 downto 16)) & ascii(lux_bcd_value(15 downto 12)) & ascii(lux_bcd_value(11 downto 8)) & ascii(lux_bcd_value(7 downto 4)) & ascii(lux_bcd_value(3 downto 0));
 					lcd_cmds_co2	:= asciitext("C: ") & ascii(co2_bcd_value(15 downto 12)) & ascii(co2_bcd_value(11 downto 8)) & ascii(co2_bcd_value(7 downto 4)) & ascii(co2_bcd_value(3 downto 0));
+					lcd_thresh_mst	:= ascii(mst_bcd_thresh(11 downto 8)) & ascii(mst_bcd_thresh(7 downto 4)) & asciitext(".") & ascii(mst_bcd_thresh(3 downto 0));
+					lcd_thresh_tmp	:= ascii(tmp_bcd_thresh(11 downto 8)) & ascii(tmp_bcd_thresh(7 downto 4)) & asciitext(".") & ascii(tmp_bcd_thresh(3 downto 0));
+					lcd_thresh_lux	:= ascii(lux_bcd_value(19 downto 16)) & ascii(lux_bcd_thresh(15 downto 12)) & ascii(lux_bcd_thresh(11 downto 8)) & ascii(lux_bcd_thresh(7 downto 4)) & ascii(lux_bcd_thresh(3 downto 0));
 					-- set next lcd commands that will be displayed
-					lcd_cmds_nxt	<= lcd_cmd(lcd_cursor_pos(0, 0) & lcd_cmds_mst & lcd_cursor_pos(0, 9) & lcd_cmds_co2 & lcd_cursor_pos(1, 0) & lcd_cmds_lux & lcd_cursor_pos(1, 9) & lcd_cmds_tmp);
+					if key(1) = '0' then
+						lcd_cmds_nxt	<= lcd_cmd(lcd_cursor_pos(0, 0) & lcd_cmds_mst & asciitext("  ") & lcd_cmds_co2 & lcd_cmds_lux & asciitext(" ") & lcd_cmds_tmp);
+					else
+						lcd_cmds_nxt	<= lcd_cmd(lcd_cursor_pos(0, 0) & asciitext("Thresh (L,M,T)") & asciitext("  ") & lcd_thresh_lux & asciitext(" ") & lcd_thresh_mst & asciitext(" ") & lcd_thresh_tmp & asciitext(" "));
+					end if;
 					-- change state in order to display it/send it to the LCD
 					lcd_state_nxt 	<= S_LCD_DISPLAY;
 				end if;

@@ -216,7 +216,7 @@ begin
 	process(cycle_pulse, i2c_error, i2c_busy, i2c_rx_data, i2c_rx_data_valid, moist_state, moist_received_cnt, moist_busy, moist_valid, moist_vals, moist_read_delay_cnt, moist_boot_delay_cnt, moisture_reg, temp_reg, scan_addr)
 		-- variable is used to store the read value temporally
 		-- it allows us to compare the value to certain constants more easily
-		variable temp_value	: unsigned(15 downto 0) := (others => '0');
+		variable temp_value	: unsigned(23 downto 0) := (others => '0');
 	begin	
 		-- output values
 		moisture		<= moisture_reg;
@@ -377,11 +377,17 @@ begin
 				moist_received_cnt_nxt	<= (others => '0');
 				if moist_valid = '1' then
 					-- data is valid
-					temp_value := unsigned(std_ulogic_vector'(moist_vals(0) & moist_vals(1))); -- reverse byte order
+					temp_value := resize(unsigned(std_ulogic_vector'(moist_vals(0) & moist_vals(1))), temp_value'length); -- reverse byte order
 					-- check if received value is in a reasonable range
-					if temp_value >= to_unsigned(300, temp_value'length) and temp_value <= to_unsigned(700, temp_value'length) then
-						-- update moisture register
-						moisture_reg_nxt <= temp_value;
+					if temp_value < to_unsigned(400, temp_value'length) then
+						-- too low, clip to 0%
+						moisture_reg_nxt	<= (others => '0');
+					elsif temp_value > to_unsigned(580, temp_value'length) then
+						-- too damn high, clip to 99.9%
+						moisture_reg_nxt	<= to_unsigned(999, moisture_reg'length);
+					else
+						-- in bounds, update moisture register
+						moisture_reg_nxt <= resize(shift_right((temp_value - 400) * 4551, 13), moisture_reg'length);
 					end if;
 				end if;
 				moist_state_nxt		<= S_TMP_REGISTER_BYTE0;
@@ -442,7 +448,7 @@ begin
 				moist_received_cnt_nxt	<= (others => '0');
 				if moist_valid = '1' then
 					-- data is valid
-					temp_value := unsigned(std_ulogic_vector'(moist_vals(0) & moist_vals(1)));
+					temp_value := resize(unsigned(std_ulogic_vector'(moist_vals(0) & moist_vals(1))), temp_value'length);
 					-- check if received value is in a reasonable range
 					if temp_value > to_unsigned(150, temp_value'length) and temp_value < to_unsigned(350, temp_value'length) then
 						-- update moisture register

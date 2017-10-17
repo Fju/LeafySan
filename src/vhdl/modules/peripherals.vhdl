@@ -16,11 +16,11 @@ use work.iac_pkg.all;
 
 entity peripherals is
 	port(
-		clock					: in  std_ulogic;
-		reset					: in  std_ulogic;
+		clock				: in  std_ulogic;
+		reset				: in  std_ulogic;
 		temperature			: in  unsigned(11 downto 0);
 		brightness			: in  unsigned(15 downto 0);
-		moisture				: in  unsigned(15 downto 0);
+		moisture			: in  unsigned(15 downto 0);
 		
 		lighting_on			: out std_ulogic;
 		heating_on			: out std_ulogic;
@@ -28,8 +28,8 @@ entity peripherals is
 		ventilation_on		: out std_ulogic;
 		
 		heating_thresh		: in  unsigned(11 downto 0);
-		lighting_thresh	: in  unsigned(15 downto 0);
-		watering_thresh	: in  unsigned(15 downto 0)
+		lighting_thresh		: in  unsigned(15 downto 0);
+		watering_thresh		: in  unsigned(15 downto 0)
 	);
 end peripherals;
 

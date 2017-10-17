@@ -63,7 +63,6 @@ port.on('data', (data) => {
 				var i, item;
 				for (i = 0; i != completeData.length; ++i) {
 					item = completeData[i];
-					// compare last two bits
 					if (item & 0x03 === PROTOCOL_LIGHTING_ID) {
 						values.brightness = item >> 2;		
 					} else if (item & 0x03 === PROTOCOL_WATERING_ID) {
@@ -179,8 +178,8 @@ wss.on('connection', (ws, req) => {
 				type: 'values',
 				data: {
 					brightness: values.brightness,
-					moisture: (Math.min(1, Math.max(0, (values.moisture - 340) / (580 - 340))) * 100).toFixed(1),
-					temperature: values.temperature / 10,
+					moisture: (values.moisture * 0.1).toFixed(1),
+					temperature: (values.temp * 0.1).toFixed(1),
 					carbondioxide: values.carbondioxide
 				}
 			}));
