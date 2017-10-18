@@ -15,6 +15,10 @@ const optionDefinitions = [
 	{ name: 'write-data', alias: 'd', type: Boolean },
 	{ name: 'http-port', alias: 'h', type: Number, defaultValue: 8000 }
 ];
+
+const majorVersion	= parseInt(process.version.substr(1).split('.')[0]);
+
+
 var config = commandLineArgs(optionDefinitions, { partial: true });
 if (config['list-serial-ports']) {
 	SerialPort.list(function (err, ports) {
@@ -89,8 +93,16 @@ port.on('data', (data) => {
 });
 
 setInterval(function() {
-	//send 
-	var buf = Buffer.from([PROTOCOL_START_CMD, 0, 0, 0, 0, 0, 0, 0, 0, 0, PROTOCOL_END_CMD]), s = 0, i, shift = 0, prefix, data, value;
+	var buf, s = 0, i, shift = 0, prefix, data, value;
+
+	if (majorVersion >= 6) {
+		// Buffer.from was introduced in Node.js v6.0.0
+		buf = Buffer.from([PROTOCOL_START_CMD, 0, 0, 0, 0, 0, 0, 0, 0, 0, PROTOCOL_END_CMD]);
+	} else {
+		// use (depricated) fallback in older versions
+		buf = new Buffer([PROTOCOL_START_CMD, 0, 0, 0, 0, 0, 0, 0, 0, 0, PROTOCOL_END_CMD]);
+	}
+
 	for (i = 0; i != PROTOCOL_SEND_BYTES; ++i) {
 		if (s % 2 === 0) prefix = PROTOCOL_DATA_CMD;
 		else prefix = PROTOCOL_DATA_ALT_CMD;
