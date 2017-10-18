@@ -144,14 +144,14 @@ architecture rtl of invent_a_chip is
 	component peripherals is
 		port(
 			clock				: in  std_ulogic;
-			reset				: in  std_ulogic;	
+			reset				: in  std_ulogic;
 			temperature			: in  unsigned(11 downto 0);
 			brightness			: in  unsigned(15 downto 0);
-			moisture			: in  unsigned(15 downto 0);			
+			moisture			: in  unsigned(15 downto 0);
 			lighting_on			: out std_ulogic;
 			heating_on			: out std_ulogic;
 			watering_on			: out std_ulogic;
-			ventilation_on		: out std_ulogic;			
+			ventilation_on		: out std_ulogic;
 			heating_thresh		: in  unsigned(11 downto 0);
 			lighting_thresh		: in  unsigned(15 downto 0);
 			watering_thresh		: in  unsigned(15 downto 0)
@@ -185,7 +185,7 @@ architecture rtl of invent_a_chip is
 
 	
 	-- LCD registers
-	signal lcd_clock, lcd_clock_nxt	: unsigned(to_log2(LCD_CLOCK_TICKS) - 1 downto 0);	
+	signal lcd_clock, lcd_clock_nxt	: unsigned(to_log2(LCD_CLOCK_TICKS) - 1 downto 0);
 	signal lcd_cmds, lcd_cmds_nxt 	: lcd_commands_t(0 to 32);
 	-- amount of bytes sent to determine whether all data has been sent already
 	signal lcd_sent_chars, lcd_sent_chars_nxt : unsigned(to_log2(lcd_cmds'length) - 1 downto 0);
@@ -238,10 +238,10 @@ architecture rtl of invent_a_chip is
 	
 	-- registers to create blinking led effect
 	signal warning_clock, warning_clock_nxt	: unsigned(to_log2(WARNING_CLOCK_TICKS) - 1 downto 0);
-	signal warning_led, warning_led_nxt		: std_ulogic;	
+	signal warning_led, warning_led_nxt		: std_ulogic;
 begin
 	-- map all component signals to internal signals
-	adc_sensors_inst : adc_sensors	
+	adc_sensors_inst : adc_sensors
 		port map (
 			clock			=> clock,
 			reset			=> reset,
@@ -268,7 +268,7 @@ begin
 			i2c_dat_out		=> light_dat_out,
 			value			=> light_value,
 			enabled			=> light_enabled
-		);	
+		);
 	moisture_sensor_inst : moisture_sensor
 		generic map (
 			CYCLE_TICKS		=> SENSOR_CYCLE_TICKS
@@ -287,13 +287,13 @@ begin
 			address			=> moist_address,
 			enabled			=> moist_enabled
 		);
-	peripherals_inst : peripherals		
+	peripherals_inst : peripherals
 		port map (
 			clock			=> clock,
 			reset			=> reset,
 			temperature		=> adc_temperature,
 			brightness		=> light_value,
-			moisture		=> moist_moisture,			
+			moisture		=> moist_moisture,
 			lighting_on		=> peripherals_lighting_on,
 			heating_on		=> peripherals_heating_on,
 			watering_on		=> peripherals_watering_on,
@@ -369,7 +369,7 @@ begin
 		gp_ctrl(3 downto 2)	<= moist_clk_ctrl & moist_dat_ctrl;
 		gp_out(3 downto 2)	<= moist_clk_out & moist_dat_out;
 		moist_clk_in		<= gp_in(3);
-		moist_dat_in		<= gp_in(2);		
+		moist_dat_in		<= gp_in(2);	
 		
 		-- setup pin mode: 1 input (safety switch), 4 outputs (relais control)
 		gp_ctrl(8 downto 4)	<= "01111";
@@ -403,7 +403,7 @@ begin
 					warning_led_nxt <= '1';
 				end if;
 			else
-				warning_clock_nxt <= warning_clock + to_unsigned(1, warning_clock'length);				
+				warning_clock_nxt <= warning_clock + to_unsigned(1, warning_clock'length);
 			end if;
 		end if;
 		
@@ -434,7 +434,7 @@ begin
 	begin	
 		-- hold values of all registers by default
 		lcd_state_nxt		<= lcd_state;
-		lcd_clock_nxt		<= lcd_clock;		
+		lcd_clock_nxt		<= lcd_clock;
 		lcd_cmds_nxt		<= lcd_cmds;
 		lcd_sent_chars_nxt	<= lcd_sent_chars;
 
@@ -443,7 +443,7 @@ begin
 		lcd_wr			<= '0';
 		lcd_addr		<= (others => '0');
 		lcd_dout		<= (others => '0');
-		lcd_ack_rdy		<= '0';		
+		lcd_ack_rdy		<= '0';
 
 		case lcd_state is
 			when S_LCD_WAIT =>
@@ -453,7 +453,7 @@ begin
 					-- switch state after 10000000 "clocks" (200 ms)
 					lcd_clock_nxt 		<= (others => '0');
 					lcd_sent_chars_nxt	<= (others => '0');
-					
+
 					-- convert binary values into x decimal numbers
 					mst_bcd_value	:= unsigned(to_bcd(std_ulogic_vector(moist_moisture), 4));
 					tmp_bcd_value	:= unsigned(to_bcd(std_ulogic_vector(moist_temperature), 4));
@@ -462,7 +462,7 @@ begin
 					mst_bcd_thresh	:= unsigned(to_bcd(std_ulogic_vector(watering_thresh), 3));
 					tmp_bcd_thresh	:= unsigned(to_bcd(std_ulogic_vector(heating_thresh), 3));
 					lux_bcd_thresh	:= unsigned(to_bcd(std_ulogic_vector(lighting_thresh), 5));
-					
+
 					-- ascii storages
 					lcd_cmds_mst	:= asciitext("M: ") & ascii(mst_bcd_value(15 downto 12)) & ascii(mst_bcd_value(11 downto 8)) & ascii(mst_bcd_value(7 downto 4)) & ascii(mst_bcd_value(3 downto 0));
 					lcd_cmds_tmp	:= asciitext("T: ") & ascii(tmp_bcd_value(15 downto 12)) & ascii(tmp_bcd_value(11 downto 8)) & ascii(tmp_bcd_value(7 downto 4)) & ascii(tmp_bcd_value(3 downto 0));
@@ -489,7 +489,7 @@ begin
 					lcd_addr	<= CV_ADDR_LCD_DATA;
 					-- send one byte of date
 					lcd_dout(7 downto 0) <= lcd_cmds(to_integer(lcd_sent_chars));
-					
+
 					-- check whether all characters have already been sent
 					if lcd_sent_chars = to_unsigned(lcd_cmds'length - 1, lcd_sent_chars'length) then
 						-- all characters have been sent, so switch state back to S_WAIT
@@ -506,13 +506,13 @@ begin
 	process(uart_state, uart_wr_array, uart_rd_array, uart_sent_bytes, uart_received_bytes, uart_irq_tx, uart_irq_rx, uart_din,
 		peripherals_ventilation_on, peripherals_heating_on, peripherals_lighting_on, peripherals_watering_on,  moist_moisture, moist_temperature, light_value, adc_carbondioxide,
 		heating_thresh, lighting_thresh, watering_thresh)
-		constant VALUE_COUNT		: natural := 5; -- amount of data segments (four segments for each sensor + one segment including all states (on/off) of peripherals)
+		constant VALUE_COUNT	: natural := 5; -- amount of data segments (four segments for each sensor + one segment including all states (on/off) of peripherals)
 		constant SEGMENT_COUNT	: natural := 3; -- 3 bytes per "segment"
-		variable i, j				: natural := 0; -- loop variables
-		variable segment_cmd		: std_ulogic_vector(1 downto 0);
+		variable i, j			: natural := 0; -- loop variables
+		variable segment_cmd	: std_ulogic_vector(1 downto 0);
 		variable segment_data	: std_ulogic_vector(SEGMENT_COUNT * UART_DATA_WIDTH - 1 downto 0);
-		variable item				: uart_protocol_entry_t;	
-		variable segment_value	: std_ulogic_vector(15 downto 0);	
+		variable item			: uart_protocol_entry_t;
+		variable segment_value	: std_ulogic_vector(15 downto 0);
 	begin
 		uart_cs			<= '0';
 		uart_wr			<= '0';
@@ -520,13 +520,13 @@ begin
 		uart_dout		<= (others => '0');
 		uart_ack_rx  	<= '0';
 		uart_ack_tx  	<= '0';
-		
+
 		-- hold values		
-		uart_state_nxt				<= uart_state;
+		uart_state_nxt			<= uart_state;
 		uart_sent_bytes_nxt		<= uart_sent_bytes;
 		uart_received_bytes_nxt	<= uart_received_bytes;
-		uart_rd_array_nxt			<= uart_rd_array;
-		uart_wr_array_nxt			<= uart_wr_array;
+		uart_rd_array_nxt		<= uart_rd_array;
+		uart_wr_array_nxt		<= uart_wr_array;
 		lighting_thresh_nxt		<= lighting_thresh;
 		watering_thresh_nxt		<= watering_thresh;
 		heating_thresh_nxt		<= heating_thresh;
@@ -619,14 +619,14 @@ begin
 					uart_cs		<= '1';
 					uart_addr	<= CV_ADDR_UART_DATA_TX;
 					uart_wr		<= '1';
-					
+
 					item := uart_wr_array(to_integer(uart_sent_bytes));
-					uart_dout(7 downto 0)	<= item.cmd & item.data;									
-					
+					uart_dout(7 downto 0)	<= item.cmd & item.data;
+
 					if uart_sent_bytes = to_unsigned(UART_WR_BYTE_COUNT - 1, uart_sent_bytes'length) then
 						-- last byte sent
 						uart_sent_bytes_nxt	<= (others => '0'); -- reset counter
-						uart_state_nxt			<= S_UART_WR_END;						
+						uart_state_nxt			<= S_UART_WR_END;
 					else
 						-- increment counter
 						uart_sent_bytes_nxt	<= uart_sent_bytes + to_unsigned(1, uart_sent_bytes'length);
@@ -639,23 +639,23 @@ begin
 					uart_wr		<= '1';
 					-- write `end` cmd
 					uart_dout(7 downto 0)	<= "00111111";
-					
+
 					uart_state_nxt <= S_UART_RD_WAIT_START;
 				end if;
 		end case;
 	end process;
-	
+
 	-- Seven Segment process
 	process(seg_state, seg_clock, adc_temperature, moist_address)
 	begin
 		seg_state_nxt	<= seg_state;
 		seg_clock_nxt	<= seg_clock;
-		
+
 		sevenseg_cs		<= '0';
 		sevenseg_wr		<= '0';
 		sevenseg_addr	<= CV_ADDR_SEVENSEG_DEC;
 		sevenseg_dout	<= (others => '0');
-		
+
 		case seg_state is
 			when S_SEG_WAIT =>
 				if seg_clock = to_unsigned(SEG_CLOCK_TICKS - 1, seg_clock'length) then
@@ -677,7 +677,7 @@ begin
 				seg_state_nxt	<= S_SEG_WAIT;
 		end case;
 	end process;
-	
+
 	-- unused signals
 	audio_cs 	 		<= '0';
 	audio_wr 	 		<= '0';

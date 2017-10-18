@@ -387,7 +387,7 @@ begin
 						moisture_reg_nxt	<= to_unsigned(999, moisture_reg'length);
 					else
 						-- in bounds, update moisture register
-						moisture_reg_nxt <= resize(shift_right((temp_value - 400) * 4551, 13), moisture_reg'length);
+						moisture_reg_nxt <= resize(shift_right((temp_value - 400) * 45511, 13), moisture_reg'length);
 					end if;
 				end if;
 				moist_state_nxt		<= S_TMP_REGISTER_BYTE0;

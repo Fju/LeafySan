@@ -40,7 +40,7 @@ const PROTOCOL_CO2_ID		= 0x03; // 0000 0011
 const PROTOCOL_SEND_BYTES	= 9;	// amount of bytes to be sent
 
 var values = { temp: 0, moisture: 0, brightness: 0, co2: 0 };
-var thresholds = { temp: 22.0, moisture: 50.0, brightness: 400 };
+var thresholds = { temp: 21.0, moisture: 50.0, brightness: 60 };
 
 var port = new SerialPort(config['serial-port'], { baudRate: 115200 }),
 	started, completeData, prevCmd, bitShift, index;
@@ -63,31 +63,30 @@ port.on('data', (data) => {
 				var i, item;
 				for (i = 0; i != completeData.length; ++i) {
 					item = completeData[i];
-					if (item & 0x03 === PROTOCOL_LIGHTING_ID) {
-						values.brightness = item >> 2;		
-					} else if (item & 0x03 === PROTOCOL_WATERING_ID) {
+					if (i === PROTOCOL_LIGHTING_ID) {
+						values.brightness = item >> 2;
+					} else if (i === PROTOCOL_WATERING_ID) {
 						values.moisture = item >> 2;
-					} else if (item & 0x03 === PROTOCOL_HEATING_ID) {
+					} else if (i === PROTOCOL_HEATING_ID) {
 						values.temp = item >> 2;
-					} else if (item & 0x03 === PROTOCOL_CO2_ID) {
+					} else if (i === PROTOCOL_CO2_ID) {
 						values.co2 = item >> 2;
 					}
 				}
+				console.log(values, completeData);
 			} else console.log('Received invalid dataset :/');
 		} else if (started) {
-			var newCmd = (element && 0xC0) >> 6;
+			var newCmd = (element & 0xC0) >> 6;
 			if (!prevCmd) prevCmd = newCmd;
 			if (prevCmd !== newCmd) {
 				bitShift = 0;
 				index++;
+				prevCmd = newCmd;
 			}
-			if (index <= 4) completeData[index] = completeData[index] | ((element & 0x3F) << (6 * bitShift++));
+			if (index <= 4) completeData[index] = completeData[index] | ((element & 0x3F) << (6 * (2-bitShift++)));
 		}
 	});
 });
-function parseData() {
-	console.log(values);
-}
 
 setInterval(function() {
 	//send 
@@ -130,13 +129,13 @@ setInterval(function() {
 		value = ([d, v.t, v.m, v.b, v.c]).join(',');
 		fs.writeFile(path, fileContent + value + '\n', (err) => {
 			if (err) throw err;
-			console.log('written', path, value);		
+			console.log('written', path, value);
 		});
-	});	
+	});
 }, 1000);
 
 let server = http.createServer((req, res) => {
-	var url = req.url;	
+	var url = req.url;
 
 	//beautify URL, shows foo.bar when requested foo.bar/index.html
 	if (url === '/index.html') {
@@ -188,7 +187,7 @@ wss.on('connection', (ws, req) => {
 			if (json.date > 0) {
 				var date = new Date(json.date);
 				var archivePath = 'data_' + date.getFullYear() + '-' + (1+date.getMonth()) + '-' + date.getDate() + '.csv';
-			}  
+			}
 			fs.readFile(archivePath, 'utf-8', (err, data) => {
 				if (err) data = '';
 				ws.send(JSON.stringify({

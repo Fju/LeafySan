@@ -36,13 +36,13 @@ end peripherals;
 architecture rtl of peripherals is
 	
 	constant TIMER_CLOCK_COUNT				: natural := 50000000;	-- 1s
-	constant LIGHTING_CYCLE_CLOCK_COUNT		: natural := 5;		-- 5s
-	constant HEATING_DELAY_CLOCK_COUNT		: natural := 5;		-- 5s
-	constant HEATING_TIMEOUT_CLOCK_COUNT	: natural := 180; 	-- 3min
-	constant WATERING_DELAY_CLOCK_COUNT		: natural := 60; 	-- 60s
-	constant WATERING_TIMEOUT_CLOCK_COUNT	: natural := 180; 	-- 3min	
-	constant VENTILATION_DELAY_COUNT		: natural := 900;	-- 15min
-	constant VENTILATION_TIMEOUT_COUNT		: natural := 300;	-- 5min
+	constant LIGHTING_CYCLE_CLOCK_COUNT		: natural := 5;			-- 5s
+	constant HEATING_DELAY_CLOCK_COUNT		: natural := 5;			-- 5s
+	constant HEATING_TIMEOUT_CLOCK_COUNT	: natural := 180; 		-- 3min
+	constant WATERING_DELAY_CLOCK_COUNT		: natural := 1800; 		-- 30min 
+	constant WATERING_TIMEOUT_CLOCK_COUNT	: natural := 180; 		-- 2min	
+	constant VENTILATION_DELAY_COUNT		: natural := 900;		-- 15min
+	constant VENTILATION_TIMEOUT_COUNT		: natural := 300;		-- 5min
 
 	type timer_state_t is (S_TIMER_RUNNING, S_TIMER_FINISHED);
 	-- no need for lighting state
@@ -85,7 +85,7 @@ begin
 			timer_state			<= timer_state_nxt;
 			heating_state		<= heating_state_nxt;
 			watering_state 		<= watering_state_nxt;
-			ventilation_state	<= ventilation_state_nxt;			
+			ventilation_state	<= ventilation_state_nxt;
 			timer_clock			<= timer_clock_nxt;
 			lighting_clock		<= lighting_clock_nxt;
 			watering_clock		<= watering_clock_nxt;
