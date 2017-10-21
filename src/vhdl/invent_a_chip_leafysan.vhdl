@@ -600,7 +600,7 @@ begin
 							segment_data	:= std_ulogic_vector(resize(adc_carbondioxide, segment_data'length - 2)) & "11";
 						else
 							segment_cmd	:= "10";
-							segment_data	:= std_ulogic_vector(resize(unsigned'(peripherals_lighting_on & peripherals_watering_on & peripherals_heating_on & peripherals_ventilation_on & "00"), segment_data'length));
+							segment_data	:= std_ulogic_vector(shift_left(resize(unsigned'(peripherals_lighting_on & peripherals_watering_on & peripherals_heating_on & peripherals_ventilation_on & "00"), segment_data'length), 12));
 						end if;
 						for j in 0 to SEGMENT_COUNT - 1 loop
 							if i < 4 or j = 0 then

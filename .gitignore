@@ -1,12 +1,11 @@
-frontend/data_*.csv
+frontend/data/data_*.csv
+!frontend/data/data_test.csv
 frontend/node_modules/
 *.vhdl.bak
 *.vhd.bak
-src/quartus/db/
-src/quartus/incremental_db/
-src/quartus/simulation/
-src/quartus/output_files/
-src/quartus/PLLJ_PLLSPE_INFO.txt
+src/quartus/*
+!src/quartus/output_files/iac_toplevel.sof
+!src/quartus/iac_toplevel.qpf
 src/modelsim/iac_testbench.cr.mti
 src/modelsim/work/
 src/modelsim/transcript

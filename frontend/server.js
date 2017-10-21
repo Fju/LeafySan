@@ -33,17 +33,21 @@ if (config['list-serial-ports']) {
 	console.log('Listening to', config['serial-port']);
 }
 
-const PROTOCOL_START_CMD	= 0x40; // 0100 0000
-const PROTOCOL_DATA_CMD		= 0x80; // 1000 0000
-const PROTOCOL_DATA_ALT_CMD	= 0xC0; // 1100 0000
-const PROTOCOL_END_CMD		= 0x3F; // 0011 1111
-const PROTOCOL_LIGHTING_ID	= 0x00; // 0000 0000
-const PROTOCOL_WATERING_ID	= 0x01; // 0000 0001
-const PROTOCOL_HEATING_ID	= 0x02; // 0000 0010
-const PROTOCOL_CO2_ID		= 0x03; // 0000 0011
-const PROTOCOL_SEND_BYTES	= 9;	// amount of bytes to be sent
+const PROTOCOL_START_CMD			= 0x40; // 0100 0000
+const PROTOCOL_DATA_CMD				= 0x80; // 1000 0000
+const PROTOCOL_DATA_ALT_CMD			= 0xC0; // 1100 0000
+const PROTOCOL_END_CMD				= 0x3F; // 0011 1111
+const PROTOCOL_LIGHTING_ID			= 0x00; // 0000 0000
+const PROTOCOL_WATERING_ID			= 0x01; // 0000 0001
+const PROTOCOL_HEATING_ID			= 0x02; // 0000 0010
+const PROTOCOL_CO2_ID				= 0x03; // 0000 0011
+const PROTOCOL_LIGHTING_ON_ID		= 0x20; // 0010 0000
+const PROTOCOL_WATERING_ON_ID		= 0x10; // 0001 0000
+const PROTOCOL_HEATING_ON_ID		= 0x08; // 0000 1000
+const PROTOCOL_VENTILATION_ON_ID	= 0x04; // 0000 0100
+const PROTOCOL_SEND_BYTES			= 9;	// amount of bytes to be senti
 
-var values = { temp: 0, moisture: 0, brightness: 0, co2: 0 };
+var values = { temp: 0, moisture: 0, brightness: 0, co2: 0, heating: false, watering: false, lighting: false, ventilation: false };
 var thresholds = { temp: 21.0, moisture: 50.0, brightness: 60 };
 
 var port = new SerialPort(config['serial-port'], { baudRate: 115200 }),
@@ -52,7 +56,6 @@ port.on('error', (err) => {
 	console.log('Error: Something went wrong reading the serial port!\n' + err);
 });
 port.on('data', (data) => {
-	console.log(data);
 	data.forEach((element) => {
 		if (element === PROTOCOL_START_CMD) {
 			started = true;
@@ -75,9 +78,14 @@ port.on('data', (data) => {
 						values.temp = item >> 2;
 					} else if (i === PROTOCOL_CO2_ID) {
 						values.co2 = item >> 2;
+					} else {
+						item = item >> 12; // we only need the last 6 bit
+						values.heating = (item & PROTOCOL_HEATING_ON_ID) > 0;
+						values.watering = (item & PROTOCOL_WATERING_ON_ID) > 0;
+						values.lighting = (item & PROTOCOL_LIGHTING_ON_ID) > 0;
+						values.ventilation = (item & PROTOCOL_VENTILATION_ON_ID) > 0;
 					}
 				}
-				console.log(values, completeData);
 			} else console.log('Received invalid dataset :/');
 		} else if (started) {
 			var newCmd = (element & 0xC0) >> 6;
@@ -132,13 +140,17 @@ setInterval(function() {
 			t: (values.temp * 0.1).toFixed(1),
 			m: (values.moisture * 0.1).toFixed(1),
 			b: values.brightness,
-			c: values.carbondioxide
+			c: values.co2,
+			h: values.heating * 1,
+			w: values.watering * 1,
+			l: values.lighting * 1,
+			v: values.ventilation * 1
 		},
 		d = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
 
 	fs.readFile(path, 'utf-8', (err, fileContent) => {
-		if (err) fileContent = 'time,temperature,moisture,brightness,carbondioxide\n'; // write csv header
-		value = ([d, v.t, v.m, v.b, v.c]).join(',');
+		if (err) fileContent = 'time,temperature,moisture,brightness,co2,heating,watering,lighting,ventilation\n'; // write csv header
+		value = ([d, v.t, v.m, v.b, v.c, v.h, v.w, v.l, v.v]).join(',');
 		fs.writeFile(path, fileContent + value + '\n', (err) => {
 			if (err) throw err;
 			console.log('written', path, value);
@@ -191,7 +203,11 @@ wss.on('connection', (ws, req) => {
 					brightness: values.brightness,
 					moisture: (values.moisture * 0.1).toFixed(1),
 					temperature: (values.temp * 0.1).toFixed(1),
-					carbondioxide: values.carbondioxide
+					co2: values.co2,
+					heating: values.heating * 1,
+					watering: values.watering * 1,
+					lighting: values.lighting * 1,
+					ventilation: values.ventilation * 1
 				}
 			}));
 		} else if (json.type === 'archive') {
@@ -200,19 +216,32 @@ wss.on('connection', (ws, req) => {
 				var date = new Date(json.date);
 				var archivePath = 'data_' + date.getFullYear() + '-' + (1+date.getMonth()) + '-' + date.getDate() + '.csv';
 			}
-			fs.readFile(archivePath, 'utf-8', (err, data) => {
+			fs.readFile('data/' + archivePath, 'utf-8', (err, data) => {
 				if (err) data = '';
+				var array = data.split('\n'), header = array[0], x = 0, i = 0, ratio;
+				array.splice(0, 1);
+				if (array.length > 1000) {
+					ratio = 1000 / array.length;
+					while (x < array.length) {
+						i = (i + ratio) % 1;
+						if (i < ratio) x++;
+						else array.splice(x, 1);
+					}
+				}
+				array.unshift(header);
+				console.log(array.length);
 				ws.send(JSON.stringify({
 					type: 'archive',
-					data: data
+					data: array.join('\n')
 				}));
 			});
 		} else if (json.type === 'thresholds') {
-			thresholds.changed = true;
-			var a = parseFloat(json.temp), b = parseFloat(json.moisture), c = parseInt(json.brightness);
-			if (!isNaN(a) && a >= 0 && a <= 30) thresholds.temp = Math.round(a, 1);
-			if (!isNaN(b) && b >= 0 && b <= 100) thresholds.moisture = Math.round(b, 1);
-			if (!isNaN(c) && c >= 0 && c <= 40000) thresholds.brightness = c;
+			var a = json.data.temperature, b = json.data.moisture, c = json.data.brightness;
+			console.log(a, b, c, json);
+			if (!isNaN(a) && a >= 0 && a <= 30) thresholds.temp = Math.round(a * 10) / 10;
+			if (!isNaN(b) && b >= 0 && b <= 100) thresholds.moisture = Math.round(b * 10) / 10;
+			if (!isNaN(c) && c >= 0 && c <= 40000) thresholds.brightness = Math.round(c);
+			console.log('Thresholds', thresholds);
 		}
 	});
 });

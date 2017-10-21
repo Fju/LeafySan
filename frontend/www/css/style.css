@@ -48,10 +48,6 @@ input[type="date"] {
 	font-size: inherit;
 }
 
-input[type="text"] {
-	border-radius: 3px;
-	padding: 0.25em;
-}
 button {
 	cursor: pointer;
 	padding: 0.5em 1em;
@@ -106,11 +102,12 @@ label > span {
 	display: inline-block;
 	min-width: 7em;
 }
+.flex-fill { flex-grow: 1 }
+
 #linechart {
 	margin-left: 2.25em;
 }
 
-.spacer { flex-grow: 1; }
 .main {
 	flex-grow: 1;
 	padding: 1em 0;
@@ -122,20 +119,22 @@ label > span {
 }
 .main-values {
 	margin: 2em 0;
+	padding: 0 1em;
 	display: flex;
 	justify-content: space-between;
+	flex-wrap: wrap;
 }
 .main-values-item {
-	margin: 5px 12px;
+	margin: 2em 12px;
 	flex-grow: 1;
-	min-width: 15em;
 }
 .main-values-item > * {
 	display: inline-block;
 }
 .main-values-item > label {
-	width: 9em;
+	width: 12em;
 	position: relative;
+	font-weight: bold;
 }
 .main-values-item > input {
 	width: 5em;
@@ -144,46 +143,92 @@ label > span {
 .main-values-item-val {
 	text-align: right;
 	padding: 3px;
-	width: 5em;
+	width: 5.5em;
 }
 .main-values-item-watermark {
 	position: absolute;
-	left: -7px;
-	top: -50%;
-	font-size: 3em;
-	color: rgba(0, 0, 0, 0.5);
-	
+	left: -10%;
+	top: -150%;
+	font-size: 5em;
+	color: rgba(0, 0, 0, 0.2);
+	z-index: -1;
 }
-.main-values-item svg {
-	max-height: 10em;
-	height: 100%;
-	width: 100%;
+.main-values-item-watermark .fa-lightbulb-o {
+	color: rgba(220, 158, 4, 0.5);
 }
-.main-values-item p {
-	margin: 0;
+.main-values-item-watermark .fa-tint {
+	color: rgba(23, 139, 202, 0.5);
 }
-
+.main-values-item-watermark .fa-thermometer-full {
+	color: rgba(244, 67, 54, 0.5);
+}
+.main-values-item-watermark .fa-leaf {
+	color: rgba(102, 153, 0, 0.5);
+}
+.main-values-controls {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	margin: 1em 0;
+	min-width: 100%;
+}
+.main-values-controls > ul {
+	padding: 0;
+	list-style-type: none;
+}
+.main-values-controls > ul li {
+	display: inline-block;
+	margin-right: 0.75em;
+}
+.main-values-controls > ul li[active="true"] .fa {
+	color: #669900;
+}
+.main-values-controls > ul li[active="false"] .fa {
+	color: #888;
+}
 .main-archive-form {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 }
 
-@media all and (max-width: 900px) {
+@media all and (max-width: 1000px) {
 	html {
-		font-size: 1.8vw;
+		font-size: 1.7vw;
 	}
-	label > span {
-		min-width: 4em;
+	.main-archive-form {
+		flex-wrap: wrap;
+		justify-content: flex-start;
+	}
+	.main-archive-form .flex-fill {
+		width: 100%;
+		margin-bottom: 1em;
+	}
+	.main-values-item > label {
+		width: 		
 	}
 }
 
-@media all and (max-width: 600px) {
+@media all and (max-width: 720px) {
+	html {
+		font-size: 12px;
+	}
+	.main-values {
+		justify-content: space-around;
+	}
+	.main-values-item {
+		flex-grow: 0;
+	}
+	.main-values-item > label {
+		width: 17.5em;
+	}
+	.main-values-item-val {
+		width: 6.5em;
+		margin-right: 1em;
+	}
+
 	label > span {
 		min-width: 0;
 		margin-right: 5px;
-	}
-	.main-values-item {
-		min-width: 5.5em;
 	}
 }

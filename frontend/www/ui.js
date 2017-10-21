@@ -18,6 +18,24 @@ bindSelectButton('selectMoisture', 'moisture');
 bindSelectButton('selectLight', 'brightness');
 bindSelectButton('selectCo2', 'carbondioxide');
 
+var controls = {
+	btn_applyThresholds:	document.getElementById('btn_applyThresholds'),
+	btn_getData:			document.getElementById('btn_getData'),
+	lbl_temperature:		document.getElementById('lbl_temperature'),
+	lbl_brightness:			document.getElementById('lbl_brightness'),
+	lbl_moisture:			document.getElementById('lbl_moisture'),
+	lbl_co2:				document.getElementById('lbl_co2'),
+	lbl_heatingOn:			document.getElementById('lbl_heatingOn'),
+	lbl_wateringOn:			document.getElementById('lbl_wateringOn'),
+	lbl_lightingOn:			document.getElementById('lbl_lightingOn'),
+	lbl_ventilationOn:		document.getElementById('lbl_ventilationOn'),
+	input_threshHeating:	document.getElementById('input_threshHeating'),
+	input_threshWatering:	document.getElementById('input_threshWatering'),
+	input_threshLighting:	document.getElementById('input_threshLighting')
+}
+
+
+
 var refreshButton = document.getElementById('refresh'),
 	dateInput = document.getElementById('date');
 
@@ -26,51 +44,19 @@ refreshButton.addEventListener('click', function() {
 	if (d !== '') leafysan.fetch((new Date(d)).getTime());
 });
 
-var waterGauge = loadLiquidFillGauge("waterGauge", 0, applyConfig({
-		waveAnimationTime: 2500,
-		waveHeight: 0.125,
-		waveRiseTime: 0,
-		decimals: 1,
-		unit: '%'
-	})),
-	lightGauge = loadLiquidFillGauge("lightGauge", 0, applyConfig({
-		waveHeight: 0,
-		waveAnimate: false,
-		circleColor: "#dc9e04",
-		textColor: "#000",
-		waveTextColor: "rgba(255, 255, 255, 0.75)",
-		waveColor: "#dc9e04",
-		waveRiseTime: 0,
-		minValue: 300,
-		maxValue: 10000,
-		unit: 'lx'
-	})),
-	tempGauge = loadLiquidFillGauge("tempGauge", 0, applyConfig({
-		waveHeight: 0,
-		waveAnimate: false,
-		circleColor: "#f44336",
-		textColor: "#000",
-		waveTextColor: "rgba(255, 255, 255, 0.75)",
-		waveColor: "#f44336",
-		waveRiseTime: 0,
-		minValue: 0,
-		maxValue: 40,
-		decimals: 1,
-		unit: '°C'
-	})),
-	co2Gauge = loadLiquidFillGauge("co2Gauge", 0, applyConfig({
-		waveHeight: 0,
-		waveAnimate: false,
-		circleColor: "#669900",
-		textColor: "#000",
-		waveTextColor: "rgba(255, 255, 255, 0.75)",
-		waveColor: "#669900",
-		waveRiseTime: 0,
-		minValue: 0,
-		maxValue: 5000,
-		textSize: 0.6,
-		unit: 'ppm'
-	}));
+btn_applyThresholds.addEventListener('click', function(e) {
+	var t = parseFloat(controls.input_threshHeating.value),
+		m = parseFloat(controls.input_threshWatering.value),
+		b = parseInt(controls.input_threshLighting.value);
+
+	var data = {};
+
+	if (!isNaN(t)) data.temperature = t;
+	if (!isNaN(m)) data.moisture = m;
+	if (!isNaN(b)) data.brightness = b;
+
+	connection.send(JSON.stringify({ type: 'thresholds', data: data }));
+});
 
 var connection = new WebSocket('ws://' + location.hostname + ':' + '8080' + '/');
 
@@ -88,7 +74,7 @@ var leafysan = {
 			else leafysan.close();
 		}
 	},
-	values: { temperature: 0, moisture: 0, brightness: 0, carbondioxide: 0 },
+	values: { temperature: 0, moisture: 0, brightness: 0, co2: 0, heating: 0, watering: 0, lighting: 0, ventilation: 0 },
 	fetch: function(date) {
 		date = date || -1;
 		connection.send(JSON.stringify({ type: 'archive', date: date }));
@@ -96,19 +82,30 @@ var leafysan = {
 	close: function() {
 		connection.close();
 		leafysan.updateCycle.quit();
-		
+
 		sweetAlert({
-			title: 'Verbindung unterbrochen!', 
-			text: 'Die Verbindung zum Server wurde unterbrochen. Laden Sie die Seite neu, um einen neuen Verbindungsaufbau zu ermöglichen', 
+			title: 'Verbindung unterbrochen!',
+			text: 'Die Verbindung zum Server wurde unterbrochen. Laden Sie die Seite neu, um einen neuen Verbindungsaufbau zu ermöglichen',
 			type: 'error',
 			showCancelButton: true,
 			closeOnConfirm: false,
 			confirmButtonText: 'Die Seite jetzt neu laden',
 			cancelButtonText: 'Nein, danke',
 			confirmButtonColor: '#ec6c62'
-		}, function(e) {
-			window.location.reload();
+		}, function(confirmed) {
+			if (confirmed) window.location.reload();
 		});
+	},
+	updateGUI: function() {
+		controls.lbl_temperature.textContent	= leafysan.values.temperature.toFixed(1) + ' °C';
+		controls.lbl_brightness.textContent		= leafysan.values.brightness + ' lx';
+		controls.lbl_moisture.textContent		= leafysan.values.moisture.toFixed(1) + ' %';
+		controls.lbl_co2.textContent			= leafysan.values.co2 + ' ppm';
+
+		controls.lbl_heatingOn.setAttribute('active', leafysan.values.heating === 1);
+		controls.lbl_wateringOn.setAttribute('active', leafysan.values.watering === 1);
+		controls.lbl_lightingOn.setAttribute('active', leafysan.values.lighting === 1);
+		controls.lbl_ventilationOn.setAttribute('active', leafysan.values.ventilation === 1);
 	}
 };
 
@@ -125,25 +122,22 @@ connection.onerror = function(error) {
 connection.onclose = leafysan.close;
 
 connection.onmessage = function(message) {
-	try {		
+	try {
 		var json = JSON.parse(message.data);
 		if (json.type === 'values') {
 			for (var key in json.data) {
 				leafysan.values[key] = parseFloat(json.data[key]);
 			}
-			waterGauge.update(leafysan.values.moisture);
-			lightGauge.update(leafysan.values.brightness);
-			tempGauge.update(leafysan.values.temperature);
-			co2Gauge.update(leafysan.values.carbondioxide);
+			leafysan.updateGUI();
 		} else if (json.type === 'archive') {
 			if (json.data === '') {
 				sweetAlert({
-					title: 'Ups!', 
-					text: 'Zu diesem Datum sind keine Daten auf dem Server vorhanden!', 
+					title: 'Ups!',
+					text: 'Zu diesem Datum sind keine Daten auf dem Server vorhanden!',
 					type: 'error'
 				});
 			}
-			else lineChart.parseData(json.data);	
+			else lineChart.parseData(json.data);
 		}
 	} catch (e) {
 		console.log(e);
