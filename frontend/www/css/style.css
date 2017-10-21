@@ -219,11 +219,7 @@ label > span {
 	.main-values-item {
 		flex-grow: 0;
 	}
-	.main-values-item > label {
-		width: 17.5em;
-	}
 	.main-values-item-val {
-		width: 6.5em;
 		margin-right: 1em;
 	}
 
