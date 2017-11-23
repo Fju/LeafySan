@@ -100,6 +100,11 @@ port.on('data', (data) => {
 	});
 });
 
+var summedValues = {
+	t: 0, m: 0, c: 0, h: 0,
+	count: 0
+};
+
 setInterval(function() {
 	var buf, s = 0, i, shift = 0, prefix, data, value;
 
@@ -134,28 +139,42 @@ setInterval(function() {
 
 	if (!config['write-data']) return; // don't write data
 
-	var date = new Date(),
-		path = 'data/data_' + date.getFullYear() + '-' + (1+date.getMonth()) + '-' + date.getDate() + '.csv',
-		v = {
-			t: (values.temp * 0.1).toFixed(1),
-			m: (values.moisture * 0.1).toFixed(1),
-			b: values.brightness,
-			c: values.co2,
-			h: values.heating * 1,
-			w: values.watering * 1,
-			l: values.lighting * 1,
-			v: values.ventilation * 1
-		},
-		d = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+	if (summedValues.count === 15 - 1) {
+		var date = new Date(),
+			path = 'data/data_' + date.getFullYear() + '-' + (1+date.getMonth()) + '-' + date.getDate() + '.csv',
+			v = {
+				t: (summedValues.t / 15.0).toFixed(1),
+				m: (summedValues.m / 15.0).toFixed(1),
+				b: Math.round(summedValues.b / 15.0),
+				c: Math.round(summedValues.c / 15.0),
+				h: values.heating * 1,
+				w: values.watering * 1,
+				l: values.lighting * 1,
+				v: values.ventilation * 1
+			},
+			d = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
 
-	fs.readFile(path, 'utf-8', (err, fileContent) => {
-		if (err) fileContent = 'time,temperature,moisture,brightness,co2,heating,watering,lighting,ventilation\n'; // write csv header
-		value = ([d, v.t, v.m, v.b, v.c, v.h, v.w, v.l, v.v]).join(',');
-		fs.writeFile(path, fileContent + value + '\n', (err) => {
-			if (err) throw err;
-			console.log('written', path, value);
+		fs.readFile(path, 'utf-8', (err, fileContent) => {
+			if (err) fileContent = 'time,temperature,moisture,brightness,co2,heating,watering,lighting,ventilation\n'; // write csv header
+			value = ([d, v.t, v.m, v.b, v.c, v.h, v.w, v.l, v.v]).join(',');
+			fs.writeFile(path, fileContent + value + '\n', (err) => {
+				if (err) throw err;
+				console.log('written', path, value);
+			});
 		});
-	});
+		summedValues.count = 0;
+		summedValues.t = 0;
+		summedValues.m = 0;
+		summedValues.b = 0;
+		summedValues.c = 0;
+	} else {
+		summedValues.count++;
+		summedValues.t += values.temp * 0.1;
+		summedValues.m += values.moisture * 0.1;
+		summedValues.b += values.brightness;
+		summedValues.c += values.co2;
+	}
+
 }, 1000);
 
 let server = http.createServer((req, res) => {
