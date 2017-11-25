@@ -38,9 +38,27 @@ Schließlich kann der Server mithilfe des Befehls
 ``` bash
 node server.js
 ```
-gestartet werden. Falls sie mit dem Raspberry Pi über WLAN verbunden sind, sollte man nun eine Webseite unter `http://192.168.2.1:8000` erreichen können, insofern die statische IP-Addresse des Raspberry Pi auf `192.168.2.1` gesetzt wurde.
+gestartet werden. Falls sie mit dem Raspberry Pi über WLAN verbunden sind, sollte man nun eine Webseite unter `http://192.168.2.1:8000` erreichen können, insofern die statische IP-Adresse des Raspberry Pi auf `192.168.2.1` gesetzt wurde.
 
-### 4. Webserver-Optionen
+### 4. Adress-Manipulation
+
+Da das Aufrufen der Website über die IP-Adresse und den Port 8000 umständlich ist, wurde der Namensauflösung von `dnsmasq` manipuliert, sodass bei einer Anfrage von `leafy.san` nach der Adresse des Pi's aufgelöst wird. Um dies umzusetzen muss die folgende Zeile in die Datei `etc/dnsmasq.conf` eingefügt werden:
+
+``` bash
+address=/leafy.san/192.168.2.1
+```
+
+Außerdem ist es der NodeJS Anwendung nicht "erlaubt" auf dem HTTP Standart Port 80 zu "lauschen", weshalb man eine "Umleitung" einbauen muss, sodass die Anwendung zwar auf dem Port 8000 (oder einem beliebigen anderen, noch nicht belegten Port) arbeitet, Anfragen von außen auf dem Port 80 auf den Port der NodeJS Anwendung weitergeleitet werden. Um dies zu erreichen kann man das Skript `redirect.sh` als super-user ausführen oder folgende Zeile in die Datei `/etc/rc.local` einfügen:
+
+``` bash
+iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 8000
+```
+
+Damit wird automatisch nach erfolgreichem Hochfahren der Befehl ausgeführt und die Umleitung eingerichtet. Zum Bearbeiten der `rc.local` Datei sind gegebenfalls Adminrechte erforderlich.
+
+Wenn alles richtig ausgeführt wurde, kann man das Frontend bequem über das Eingeben der URL `leafy.san` im Web-Browser erreichen.
+
+### 5. Webserver-Optionen
 
 Beim Starten der Server-Applikation können folgende Einstellungen vorgenommen werden:
 

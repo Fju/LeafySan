@@ -58,12 +58,12 @@ Damit man diese Werte einsehen kann und auch Archiv-Daten graphisch in einem Dia
 
 An dieser Stelle großen Dank an [Phil Martins Tutorial "Using your new Raspberry Pi 3 as a WiFi Access Point"](https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/)
 
-Nachdem der Pi als Access Point eingerichtet wurde, muss der Javascript Code des Servers mithilfe von NodeJS ausgeführt werden, damit das Frontend über den Pi erreichbar ist. Wenn alles richtig eingestellt und ausgeführt wurde, ist die Seite nach Verbinden mit dem Access Point des Pi's unter `http://192.168.2.1:8000` aufrufbar.
-Das Design der Seite wurde auch für mobile Geräte, wie z. B. Tablets oder Smartphone jeglicher Bildschirmgrößen, optimiert.
+Nachdem der Pi als Access Point eingerichtet wurde, muss der Javascript Code des Servers mithilfe von NodeJS ausgeführt werden, damit das Frontend über den Pi erreichbar ist. Wenn alles richtig eingestellt und ausgeführt wurde, ist die Seite nach Verbinden mit dem Access Point des Pi's unter `http://leafy.san` aufrufbar. [Mehr zur Umsetzung und zum Ausführen der Server Applikation](dokumentation/frontend.md)
 
-![Desktop Ansicht und mobile Ansicht im Vergleich](dokumentation/bilder/frontend.jpg)
 
-[Mehr zur Umsetzung und zum Ausführen der Server Applikation](dokumentation/frontend.md)
+![Desktop Ansicht und mobile Ansicht im Vergleich](dokumentation/bilder/frontend.png)
+
+Das Design der Seite wurde auch für mobile Geräte, wie z. B. Tablets oder Smartphone jeglicher Bildschirmgrößen, optimiert. Diese Vorschaubilder wurden mithilfe von [device.css](https://github.com/picturepan2/devices.css) erstellt.
 
 
 ## Fazit
