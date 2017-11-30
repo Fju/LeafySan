@@ -2,7 +2,7 @@
 
 LeafySan - ein vollautomatisiertes Gewächshaus gesteuert und überwacht durch einen FPGA-Chip. Dieses Projekt wurde im Zuge des bundesweiten Nachwuchswettbewerbes "Invent a Chip" im Jahr 2017 erstellt. Das Wettbewerbsprojekt wurde mit dem mit 2000€ dotierten Sonderpreis des Bundesministerium für Bildung und Forschung ausgezeichnet und kam bei den GreenTec Awards 2018 unter die TOP 10 in der Kategorie "Galileo Wissenspreis". Das [Online-Voting](http://abstimmung.greentec-awards.com/) für die TOP 3 jeder Kategorie startet am 30. November 2017 und wird am 8. Januar 2018 ausgewertet. Ich freue mich über jede Stimme für mein Projekt :wink:
 
-![TOP 10 der GreenTec Awards 2018](dokumentation/bilder/greentecawards.png)
+![TOP 10 der GreenTec Awards 2018](dokumentation/bilder/gta.jpg)
 
 Mithilfe der Hardwarebeschreibungssprache [VHDL](https://de.wikipedia.org/wiki/Very_High_Speed_Integrated_Circuit_Hardware_Description_Language) und einem DE2-Board von Altera wurde das Auslesen der Sensoren und Steuern der Aktoren umgesetzt. Des weiteren werden Sensordaten an einen Raspberry Pi gesendet, welcher diese Daten speichert. Die Daten können auf mobilen Geräten wie Tablets oder Smartphones sowie Laptops im Browser abgerufen werden.
 
